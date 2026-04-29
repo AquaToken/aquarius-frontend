@@ -31,7 +31,7 @@ const ConcentratedFeesModal = ({
     const { account, allFees, positionsCount, pending, loading, hasAnyFees, claimAllFees } =
         useConcentratedFeesSummary(pool);
 
-    const title = 'Concentrated Fees';
+    const title = 'Clime Fees';
 
     return (
         <ModalWrapper>

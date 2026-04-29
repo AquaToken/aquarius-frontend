@@ -8,55 +8,45 @@ import ExperimentalFeatureModalBg from 'assets/experimental-feature-modal-bg.svg
 import Button from 'basics/buttons/Button';
 import { ModalDescription, ModalTitle, ModalWrapper, StickyButtonWrapper } from 'basics/ModalAtoms';
 
-import { customScroll, respondDown } from 'styles/mixins';
+import { respondDown } from 'styles/mixins';
 import { Breakpoints, FONT_SIZE } from 'styles/style-constants';
 
 export const ExperimentalFeatureModalBackground = styled(ExperimentalFeatureModalBg)`
     width: 62.4rem;
+    height: 24rem;
 
     ${respondDown(Breakpoints.md)`
-        width: 100%;
+        display: none;
     `}
 `;
 
 const Description = styled(ModalDescription)`
     ${FONT_SIZE.xs};
-    ${customScroll};
-    max-height: calc(80vh - 40rem);
+`;
+
+const Title = styled(ModalTitle)`
+    ${FONT_SIZE.xl};
 `;
 
 const ExperimentalFeatureModal = ({ close }: ModalProps<never>): React.ReactNode => (
     <ModalWrapper>
-        <ModalTitle>Experimental Feature</ModalTitle>
+        <Title>Concentrated Liquidity Pools — Security Notice</Title>
         <Description>
             <p>
-                Concentrated Liquidity Pools on Aquarius are an experimental feature that has not
-                yet completed a full independent security audit.
+                Concentrated liquidity is a new pool type on Aquarius. These smart contracts have
+                not yet completed an independent security audit — an audit is currently in progress.
             </p>
             <p>
-                By interacting with these pools, you acknowledge and accept that smart contracts and
-                related systems may contain undiscovered vulnerabilities or bugs. You may experience
-                partial or total loss of deposited funds. Participation is entirely at your own
-                risk.
+                You may experience partial or total loss of deposited funds due to undiscovered
+                vulnerabilities. <strong>Only deposit amounts you are prepared to lose.</strong>
             </p>
             <p>
-                <strong>
-                    We strongly recommend depositing only amounts you are prepared to lose.
-                </strong>
+                In the event of a confirmed protocol-level exploit resulting in loss of funds,
+                Aquarius has allocated a $100,000 protection fund covering all concentrated
+                liquidity pools. Any compensation will be subject to internal review and distributed
+                at Aquarius&apos;s discretion.
             </p>
-            <p>
-                In the event of a confirmed and reproducible protocol-level bug, Aquarius may, at
-                its sole discretion, consider compensation for affected users. Any such
-                compensation, if provided, will be:
-                <br />- Subject to internal review and verification
-                <br />- Limited in scope
-                <br />- Capped at a maximum of $1,000 equivalent per pool
-            </p>
-            <p>
-                This feature may be modified, paused, or discontinued at any time without prior
-                notice.
-            </p>
-            <p>By using this functionality, you agree to these terms.</p>
+            <p>This feature may be modified, paused or discontinued without prior notice.</p>
         </Description>
 
         <StickyButtonWrapper>
