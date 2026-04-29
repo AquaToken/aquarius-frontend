@@ -54,12 +54,6 @@ const AddLiquidityEstimateSummary = ({
                         : `${minPriceInput} - ${maxPriceInput}`}
                 </SummaryValue>
             </SummaryRow>
-            <SummaryRow>
-                <SummaryLabel>Ticks</SummaryLabel>
-                <SummaryValue>
-                    {tickLower ?? '-'} to {tickUpper ?? '-'}
-                </SummaryValue>
-            </SummaryRow>
             {depositEstimate ? (
                 <>
                     <SummaryRow>
