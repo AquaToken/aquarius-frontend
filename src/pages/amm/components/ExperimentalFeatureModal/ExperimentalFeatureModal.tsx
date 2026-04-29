@@ -38,7 +38,10 @@ const ExperimentalFeatureModal = ({ close }: ModalProps<never>): React.ReactNode
             </p>
             <p>
                 You may experience partial or total loss of deposited funds due to undiscovered
-                vulnerabilities. <strong>Only deposit amounts you are prepared to lose.</strong>
+                vulnerabilities.
+            </p>
+            <p>
+                <strong>Only deposit amounts you are prepared to lose.</strong>
             </p>
             <p>
                 In the event of a confirmed protocol-level exploit resulting in loss of funds,
