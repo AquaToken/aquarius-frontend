@@ -1,7 +1,5 @@
 import styled from 'styled-components';
 
-import Checkbox from 'basics/inputs/Checkbox';
-
 import {
     flexAllCenter,
     flexColumn,
@@ -239,6 +237,7 @@ export const DepositFooter = styled.div`
 export const DepositAcknowledgementRow = styled.div`
     display: flex;
     align-items: center;
+    margin-top: 2.4rem;
     padding: 2.4rem;
     margin-bottom: 1.6rem;
     border-radius: 0.5rem;

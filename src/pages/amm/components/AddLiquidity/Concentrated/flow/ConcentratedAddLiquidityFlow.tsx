@@ -15,6 +15,7 @@ import { SorobanService, ToastService } from 'services/globalServices';
 import { PoolExtended } from 'types/amm';
 import { TokenType } from 'types/token';
 
+import Alert from 'basics/Alert';
 import { Button } from 'basics/buttons';
 import { Checkbox } from 'basics/inputs';
 
@@ -135,14 +136,18 @@ const ConcentratedAddLiquidityFlow = ({
     return (
         <>
             <ConcentratedAddLiquidityForm pool={pool} onDataChange={setFormData} />
+            <Alert
+                title="Concentrated Liquidity Pool — Security Audit in Progress"
+                text="This pool uses a new concentrated liquidity mechanism. Deposits carry elevated risk of partial or total loss."
+            />
+            <DepositAcknowledgementRow>
+                <Checkbox
+                    checked={isRiskAcknowledged}
+                    onChange={setIsRiskAcknowledged}
+                    label="I acknowledge the risk of losing deposited funds"
+                />
+            </DepositAcknowledgementRow>
             <DepositFooter>
-                <DepositAcknowledgementRow>
-                    <Checkbox
-                        checked={isRiskAcknowledged}
-                        onChange={setIsRiskAcknowledged}
-                        label="I acknowledge the risk of losing deposited funds"
-                    />
-                </DepositAcknowledgementRow>
                 <Button
                     fullWidth
                     isBig

@@ -38,14 +38,13 @@ const ExperimentalFeatureModal = ({ close }: ModalProps<never>): React.ReactNode
             </p>
             <p>
                 You may experience partial or total loss of deposited funds due to undiscovered
-                vulnerabilities.
+                vulnerabilities. <strong>Only deposit amounts you are prepared to lose.</strong>
             </p>
             <p>
-                <strong>Only deposit amounts you are prepared to lose.</strong>
-            </p>
-            <p>
-                If a confirmed protocol-level bug is found, Aquarius may offer compensation at its
-                discretion, capped at $1,000 per pool.
+                In the event of a confirmed protocol-level exploit resulting in loss of funds,
+                Aquarius has allocated a $100,000 protection fund covering all concentrated
+                liquidity pools. Any compensation will be subject to internal review and distributed
+                at Aquarius&apos;s discretion.
             </p>
             <p>This feature may be modified, paused or discontinued without prior notice.</p>
         </Description>
