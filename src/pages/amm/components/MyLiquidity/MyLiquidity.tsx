@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -8,6 +9,7 @@ import { getUserPools } from 'api/amm';
 import { POOL_TYPE } from 'constants/amm';
 import { AppRoutes } from 'constants/routes';
 
+import { loadConcentratedUserPositions } from 'helpers/amm-concentrated-user-positions';
 import { apyValueToDisplay, contractValueToAmount } from 'helpers/amount';
 import { getAssetString } from 'helpers/assets';
 import { formatBalance } from 'helpers/format-number';
@@ -43,7 +45,7 @@ import Button from 'basics/buttons/Button';
 import Select from 'basics/inputs/Select';
 import ToggleGroup from 'basics/inputs/ToggleGroup';
 import Label from 'basics/Label';
-import { CircleLoader } from 'basics/loaders';
+import { CircleLoader, DotsLoader } from 'basics/loaders';
 import PageLoader from 'basics/loaders/PageLoader';
 import Market from 'basics/Market';
 import Table, { CellAlign } from 'basics/Table';
@@ -241,6 +243,9 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
     const [incentivesSum, setIncentivesSum] = useState(new Map());
     const [isUserIncentivesLoaded, setIsUserIncentivesLoaded] = useState(false);
     const [claimPendingId, setClaimPendingId] = useState(null);
+    const [concentratedData, setConcentratedData] = useState<
+        Map<string, { tokenEstimates: string[]; liquidityUsd: number; rawLiquidity: string }>
+    >(new Map());
 
     const { value: filter, setValue: setFilter } = useUrlParam<FilterValues>(
         MyLiquidityUrlParams.filter,
@@ -344,6 +349,67 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
         updateData();
     }, [account, updateIndex]);
 
+    useEffect(() => {
+        if (!account || !pools) {
+            setConcentratedData(new Map());
+            return;
+        }
+
+        const concentratedPools = pools.filter(
+            ({ pool_type }) => pool_type === POOL_TYPE.concentrated,
+        );
+
+        if (!concentratedPools.length) {
+            setConcentratedData(new Map());
+            return;
+        }
+
+        let cancelled = false;
+
+        Promise.all(
+            concentratedPools.map(pool =>
+                loadConcentratedUserPositions(pool, account.accountId())
+                    .then(({ positions, rawLiquidity }) => ({
+                        address: pool.address,
+                        tokenEstimates: pool.tokens.map((_, index) =>
+                            positions
+                                .reduce(
+                                    (acc, position) =>
+                                        acc.plus(position.tokenEstimates[index] || '0'),
+                                    new BigNumber(0),
+                                )
+                                .toFixed(),
+                        ),
+                        liquidityUsd: positions.reduce(
+                            (acc, position) => acc + (position.liquidityUsd || 0),
+                            0,
+                        ),
+                        rawLiquidity,
+                    }))
+                    .catch(() => ({
+                        address: pool.address,
+                        tokenEstimates: pool.tokens.map(() => '0'),
+                        liquidityUsd: 0,
+                        rawLiquidity: '0',
+                    })),
+            ),
+        ).then(results => {
+            if (cancelled) return;
+            const map = new Map<
+                string,
+                { tokenEstimates: string[]; liquidityUsd: number; rawLiquidity: string }
+            >();
+            results.forEach(({ address, tokenEstimates, liquidityUsd, rawLiquidity }) => {
+                map.set(address, { tokenEstimates, liquidityUsd, rawLiquidity });
+            });
+            setConcentratedData(map);
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [pools, account, updateIndex]);
+
     const { totalLiquidity, poolsLiquidity } = useMemo(() => {
         const map = new Map<string, number>();
 
@@ -352,6 +418,13 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
         }
 
         const totalSorobanUsd = pools.reduce((acc, pool) => {
+            if (pool.pool_type === POOL_TYPE.concentrated) {
+                const usd = concentratedData.get(pool.address)?.liquidityUsd ?? 0;
+                map.set(pool.address, usd);
+                acc += usd;
+                return acc;
+            }
+
             const balance = Number(pool.balance) / 1e7;
             const liquidity = Number(pool.liquidity_usd) / 1e7;
             const totalShare = Number(pool.total_share) / 1e7;
@@ -382,7 +455,7 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
             setTotal(total);
         }
         return { totalLiquidity: total, poolsLiquidity: map };
-    }, [pools, classicPools]);
+    }, [pools, classicPools, concentratedData]);
 
     const claim = (poolId: string) => {
         if (account.authType === LoginTypes.walletConnect) {
@@ -549,6 +622,10 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
 
                         const userRewardsValue = +userRewards.get(pool.address)?.to_claim;
 
+                        const isConcentratedLoading =
+                            pool.pool_type === POOL_TYPE.concentrated &&
+                            !concentratedData.has(pool.address);
+
                         return {
                             key: pool.address || pool.id,
                             rowItems: [
@@ -570,63 +647,117 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
                                     children: poolsLiquidity.has(pool.address || pool.id) ? (
                                         <Pooled>
                                             <span>
-                                                $
-                                                {formatBalance(
-                                                    poolsLiquidity.get(pool.address || pool.id),
-                                                    true,
+                                                {isConcentratedLoading ? (
+                                                    <DotsLoader />
+                                                ) : (
+                                                    `$${formatBalance(
+                                                        poolsLiquidity.get(pool.address || pool.id),
+                                                        true,
+                                                    )}`
                                                 )}
                                             </span>
                                             <Tooltip
                                                 content={
                                                     <TooltipInner>
-                                                        {pool.tokens.map((asset, index) => (
-                                                            <TooltipRow key={getAssetString(asset)}>
-                                                                <span>Pooled {asset.code}</span>
-                                                                <span>
-                                                                    {formatBalance(
-                                                                        (+contractValueToAmount(
-                                                                            pool.reserves[index],
-                                                                            (
-                                                                                pool.tokens[
-                                                                                    index
-                                                                                ] as SorobanToken
-                                                                            ).decimal,
-                                                                        ) *
-                                                                            +pool.balance) /
-                                                                            +pool.total_share,
-                                                                        true,
-                                                                    )}
-                                                                    <AssetLogo
-                                                                        asset={asset}
-                                                                        isSmall
-                                                                        isCircle
-                                                                    />
-                                                                </span>
-                                                            </TooltipRow>
-                                                        ))}
+                                                        {pool.tokens.map((asset, index) => {
+                                                            const isConcentrated =
+                                                                pool.pool_type ===
+                                                                POOL_TYPE.concentrated;
+                                                            const concentratedAmount =
+                                                                isConcentrated
+                                                                    ? Number(
+                                                                          concentratedData.get(
+                                                                              pool.address,
+                                                                          )?.tokenEstimates[
+                                                                              index
+                                                                          ] || '0',
+                                                                      )
+                                                                    : 0;
+                                                            const amount = isConcentrated
+                                                                ? concentratedAmount
+                                                                : (+contractValueToAmount(
+                                                                      pool.reserves[index],
+                                                                      (
+                                                                          pool.tokens[
+                                                                              index
+                                                                          ] as SorobanToken
+                                                                      ).decimal,
+                                                                  ) *
+                                                                      +pool.balance) /
+                                                                  +pool.total_share;
+
+                                                            return (
+                                                                <TooltipRow
+                                                                    key={getAssetString(asset)}
+                                                                >
+                                                                    <span>Pooled {asset.code}</span>
+                                                                    <span>
+                                                                        {isConcentratedLoading ? (
+                                                                            <DotsLoader />
+                                                                        ) : (
+                                                                            formatBalance(
+                                                                                amount,
+                                                                                true,
+                                                                            )
+                                                                        )}
+                                                                        <AssetLogo
+                                                                            asset={asset}
+                                                                            isSmall
+                                                                            isCircle
+                                                                        />
+                                                                    </span>
+                                                                </TooltipRow>
+                                                            );
+                                                        })}
                                                         <TooltipRow>
                                                             <span>Shares</span>
                                                             <span>
-                                                                {formatBalance(
-                                                                    pool.balance / 1e7,
-                                                                    true,
-                                                                )}{' '}
-                                                                (
-                                                                {+getPercentValue(
-                                                                    pool.balance,
-                                                                    pool.total_share,
-                                                                    2,
-                                                                ) > 0.01
-                                                                    ? formatBalance(
-                                                                          +getPercentValue(
-                                                                              pool.balance,
-                                                                              pool.total_share,
-                                                                              2,
-                                                                          ),
-                                                                          true,
-                                                                      )
-                                                                    : '< 0.01'}
-                                                                %)
+                                                                {isConcentratedLoading ? (
+                                                                    <DotsLoader />
+                                                                ) : pool.pool_type ===
+                                                                  POOL_TYPE.concentrated ? (
+                                                                    formatBalance(
+                                                                        Number(
+                                                                            contractValueToAmount(
+                                                                                concentratedData.get(
+                                                                                    pool.address,
+                                                                                )?.rawLiquidity ||
+                                                                                    '0',
+                                                                                pool.share_token_decimals,
+                                                                            ),
+                                                                        ),
+                                                                        true,
+                                                                        true,
+                                                                        pool.share_token_decimals,
+                                                                    )
+                                                                ) : (
+                                                                    formatBalance(
+                                                                        pool.balance / 1e7,
+                                                                        true,
+                                                                    )
+                                                                )}
+                                                                {pool.pool_type !==
+                                                                    POOL_TYPE.concentrated && (
+                                                                    <>
+                                                                        {' '}
+                                                                        (
+                                                                        {+getPercentValue(
+                                                                            pool.balance,
+                                                                            pool.total_share,
+                                                                            2,
+                                                                        ) > 0.01
+                                                                            ? formatBalance(
+                                                                                  +getPercentValue(
+                                                                                      pool.balance,
+                                                                                      pool.total_share,
+                                                                                      2,
+                                                                                  ),
+                                                                                  true,
+                                                                              )
+                                                                            : '< 0.01'}
+                                                                        %)
+                                                                    </>
+                                                                )}
                                                             </span>
                                                         </TooltipRow>
                                                     </TooltipInner>
