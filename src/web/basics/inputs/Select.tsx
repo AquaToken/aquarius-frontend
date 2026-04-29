@@ -214,7 +214,9 @@ const Select = <T,>({
                     key={option.value.toString()}
                     onClick={event => onSelect(option, event)}
                 >
-                    {Boolean(option.icon) && option.icon}
+                    {Boolean(option.icon) && (
+                        <DropdownItemIcon>{option.icon}</DropdownItemIcon>
+                    )}
                     {option.label}
                 </DropdownItem>
             ))}

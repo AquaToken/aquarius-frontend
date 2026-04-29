@@ -6,7 +6,7 @@ import { POOL_TYPE } from 'constants/amm';
 
 import { SorobanService, StellarService } from 'services/globalServices';
 
-import { PoolExtended } from 'types/amm';
+import { PoolProcessed } from 'types/amm';
 import { UserDistributionPositionDetail } from 'types/amm-concentrated-liquidity-chart';
 
 import {
@@ -16,7 +16,7 @@ import {
 } from './amm-concentrated-positions';
 
 export const loadConcentratedUserPositions = async (
-    pool: PoolExtended,
+    pool: PoolProcessed,
     accountId?: string,
 ): Promise<{
     positions: UserDistributionPositionDetail[];
