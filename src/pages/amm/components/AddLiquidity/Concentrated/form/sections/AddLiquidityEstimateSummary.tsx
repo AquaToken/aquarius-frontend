@@ -19,6 +19,7 @@ import {
 
 type Props = {
     pool: PoolExtended;
+    isEmptyPool: boolean;
     hasTickRange: boolean;
     tickLower: number | null;
     tickUpper: number | null;
@@ -31,6 +32,7 @@ type Props = {
 
 const AddLiquidityEstimateSummary = ({
     pool,
+    isEmptyPool,
     hasTickRange,
     tickLower,
     tickUpper,
@@ -87,16 +89,18 @@ const AddLiquidityEstimateSummary = ({
                             </SummaryAmountItem>
                         </SummaryAmounts>
                     </SummaryRow>
-                    <SummaryRow>
-                        <SummaryLabel>Liquidity position</SummaryLabel>
-                        <SummaryValue>
-                            {depositEstimate.liquidityLoading ? (
-                                <DotsLoader />
-                            ) : (
-                                depositEstimate.liquidityDisplay
-                            )}
-                        </SummaryValue>
-                    </SummaryRow>
+                    {!isEmptyPool ? (
+                        <SummaryRow>
+                            <SummaryLabel>Liquidity position</SummaryLabel>
+                            <SummaryValue>
+                                {depositEstimate.liquidityLoading ? (
+                                    <DotsLoader />
+                                ) : (
+                                    depositEstimate.liquidityDisplay
+                                )}
+                            </SummaryValue>
+                        </SummaryRow>
+                    ) : null}
                 </>
             ) : null}
         </SummaryRows>
