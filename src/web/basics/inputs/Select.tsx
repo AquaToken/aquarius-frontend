@@ -47,14 +47,25 @@ const DropdownItem = styled.div`
     cursor: pointer;
     font-size: 1.6rem;
 
-    svg {
-        margin-right: 0.8rem;
+    &:hover {
+        background-color: ${COLORS.gray50};
     }
+`;
+
+const DropdownItemIcon = styled.span`
+    display: inline-flex;
+    align-items: center;
+    margin-right: 0.8rem;
 `;
 
 const DropdownItemHead = styled(DropdownItem)`
     padding: 0 6rem 0 1.2rem;
     min-height: 6.6rem;
+    cursor: inherit;
+
+    &:hover {
+        background-color: transparent;
+    }
 
     ${respondDown(Breakpoints.md)`
         padding: 1.2rem 6rem 1.2rem 1.2rem;;
@@ -126,6 +137,7 @@ type SelectProps<T> = {
     disabled?: boolean;
     placeholder?: string;
     usePortal?: boolean;
+    headClassName?: string;
 };
 
 const Select = <T,>({
@@ -134,6 +146,7 @@ const Select = <T,>({
     onChange,
     disabled,
     placeholder,
+    headClassName,
     usePortal = false,
     ...props
 }: SelectProps<T>): React.ReactNode => {
@@ -201,7 +214,9 @@ const Select = <T,>({
                     key={option.value.toString()}
                     onClick={event => onSelect(option, event)}
                 >
-                    {Boolean(option.icon) && option.icon}
+                    {Boolean(option.icon) && (
+                        <DropdownItemIcon>{option.icon}</DropdownItemIcon>
+                    )}
                     {option.label}
                 </DropdownItem>
             ))}
@@ -248,8 +263,10 @@ const Select = <T,>({
         >
             <DropdownArrow $isOpen={isOpen} />
             {selectedOption && !isOpen ? (
-                <DropdownItemHead>
-                    {Boolean(selectedOption.icon) && selectedOption.icon}
+                <DropdownItemHead className={headClassName}>
+                    {Boolean(selectedOption.icon) && (
+                        <DropdownItemIcon>{selectedOption.icon}</DropdownItemIcon>
+                    )}
                     {selectedOption?.label}
                 </DropdownItemHead>
             ) : (

@@ -1,19 +1,21 @@
 import { xdr } from '@stellar/stellar-sdk';
-import { useEffect, useMemo, useRef, useState } from 'react';
 import * as React from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getPool } from 'api/amm';
 
+import { POOL_TYPE } from 'constants/amm';
 import { ChartPeriods } from 'constants/charts';
 import { DAY } from 'constants/intervals';
 import { AppRoutes } from 'constants/routes';
 
-import { contractValueToAmount } from 'helpers/amount';
+import { contractValueToFormattedAmount } from 'helpers/amount';
 import { getAquaAssetData, getAssetFromString, getAssetString } from 'helpers/assets';
 import getExplorerLink, { ExplorerSection } from 'helpers/explorer-links';
 import { formatBalance } from 'helpers/format-number';
+import { navigateBackWithFallback } from 'helpers/navigation';
 import { truncateString } from 'helpers/truncate-string';
 import { openCurrentWalletIfExist } from 'helpers/wallet-connect-helpers';
 
@@ -23,12 +25,13 @@ import { LoginTypes } from 'store/authStore/types';
 import useAuthStore from 'store/authStore/useAuthStore';
 
 import { BuildSignAndSubmitStatuses } from 'services/auth/wallet-connect/wallet-connect.service';
-import { SorobanService, ToastService } from 'services/globalServices';
+import { ModalService, SorobanService, ToastService } from 'services/globalServices';
 
 import { PoolExtended, PoolIncentives } from 'types/amm';
 import { ClassicToken, SorobanToken, TokenType } from 'types/token';
 
 import ArrowLeft from 'assets/icons/arrows/arrow-left-16.svg';
+import SettingsIcon from 'assets/icons/nav/icon-settings-16.svg';
 
 import AssetLogo from 'basics/AssetLogo';
 import Button from 'basics/buttons/Button';
@@ -41,9 +44,15 @@ import Market from 'basics/Market';
 import MigrateToSorobanBanner from 'components/MigrateToSorobanBanner';
 import NoTrustline from 'components/NoTrustline';
 
+import RewardsSettingsModal from 'modals/RewardsSettingsModal';
+
 import { commonMaxWidth, flexAllCenter, flexRowSpaceBetween, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS } from 'styles/style-constants';
 
+import LiquidityDistributionChart from 'pages/amm/components/LiquidityDistributionChart/LiquidityDistributionChart';
+
+import ConcentratedFeesBanner from '../components/ConcentratedLiquidity/components/ConcentratedFeesBanner/ConcentratedFeesBanner';
+import ConcentratedPoolDisclaimer from '../components/ConcentratedLiquidity/components/ConcentratedPoolDisclaimer/ConcentratedPoolDisclaimer';
 import LiquidityChart from '../components/LiquidityChart/LiquidityChart';
 import PoolEvents from '../components/PoolEvents/PoolEvents';
 import PoolMembers from '../components/PoolMembers/PoolMembers';
@@ -63,14 +72,6 @@ const Background = styled.div`
 
     ${respondDown(Breakpoints.md)`
         padding: 1.6rem 0;
-    `}
-`;
-
-const BackButton = styled(CircleButton)`
-    margin-bottom: 7.2rem;
-
-    ${respondDown(Breakpoints.md)`
-        margin-bottom: 3.2rem;
     `}
 `;
 
@@ -194,6 +195,33 @@ const ExternalLinkStyled = styled(ExternalLink)`
     margin-top: 1.6rem;
 `;
 
+const DistributionCard = styled.div`
+    margin: 1.6rem 0 2.4rem;
+    border: 0.1rem solid ${COLORS.gray100};
+    border-radius: 1.2rem;
+    padding: 2rem;
+`;
+
+const DistributionCanvas = styled.div`
+    width: 100%;
+`;
+
+const SettingsIconPurple = styled(SettingsIcon)`
+    path {
+        stroke: ${COLORS.purple500};
+    }
+`;
+
+const PageHeader = styled.div`
+    ${flexRowSpaceBetween};
+    align-items: center;
+    margin-bottom: 7.2rem;
+
+    ${respondDown(Breakpoints.md)`
+        margin-bottom: 3.2rem;
+    `}
+`;
+
 const PoolPage = () => {
     const [pool, setPool] = useState<PoolExtended | null>(null);
     const [rewards, setRewards] = useState(null);
@@ -203,7 +231,7 @@ const PoolPage = () => {
     const [claimIncentivePending, setClaimIncentivePending] = useState(false);
     const [chartWidth, setChartWidth] = useState(0);
 
-    const { account } = useAuthStore();
+    const { account, isLogged } = useAuthStore();
 
     const navigate = useNavigate();
 
@@ -277,7 +305,7 @@ const PoolPage = () => {
                 }
                 const value = SorobanService.scVal.i128ToInt(res as xdr.ScVal);
 
-                ToastService.showSuccessToast(`Claimed ${formatBalance(+value)} AQUA`);
+                ToastService.showSuccessToast(`Claimed ${formatBalance(value)} AQUA`);
                 setClaimPending(false);
             })
             .catch(err => {
@@ -308,9 +336,7 @@ const PoolPage = () => {
                     return;
                 }
 
-                // TODO parse return values and show in the toast
-
-                ToastService.showSuccessToast(`Claimed successfully`);
+                ToastService.showSuccessToast('Claimed successfully');
                 setClaimIncentivePending(false);
             })
             .catch(err => {
@@ -331,16 +357,29 @@ const PoolPage = () => {
 
     return (
         <MainBlock>
+            {pool.pool_type === POOL_TYPE.concentrated && <ConcentratedPoolDisclaimer />}
             <Background>
                 <Section>
-                    <BackButton
-                        label="Pools"
-                        onClick={() => {
-                            navigate(AppRoutes.section.amm.link.index);
-                        }}
-                    >
-                        <ArrowLeft />
-                    </BackButton>
+                    <PageHeader>
+                        <CircleButton
+                            label="Pools"
+                            onClick={() =>
+                                navigateBackWithFallback(navigate, AppRoutes.section.amm.link.index)
+                            }
+                        >
+                            <ArrowLeft />
+                        </CircleButton>
+
+                        {isLogged && (
+                            <CircleButton
+                                onClick={() =>
+                                    ModalService.openModal(RewardsSettingsModal, { pool })
+                                }
+                            >
+                                <SettingsIconPurple />
+                            </CircleButton>
+                        )}
+                    </PageHeader>
                     <Market
                         assets={pool.tokens}
                         leftAlign
@@ -370,6 +409,10 @@ const PoolPage = () => {
                     </Links>
                 </Section>
                 <Sidebar pool={pool} />
+
+                {pool.pool_type === POOL_TYPE.concentrated && (
+                    <ConcentratedFeesBanner pool={pool} />
+                )}
 
                 {pool.tokens.length === 2 &&
                     pool.tokens.every(({ type }) => type === TokenType.classic) && (
@@ -415,8 +458,7 @@ const PoolPage = () => {
                                         .filter(({ info }) => !!Number(info.user_reward))
                                         .map(({ token, info }) => (
                                             <IncentiveAmount key={token.contract}>
-                                                {formatBalance(+info.user_reward, true)}{' '}
-                                                {token.code}
+                                                {formatBalance(info.user_reward, true)} {token.code}
                                             </IncentiveAmount>
                                         ))}
                                 </RewardsDescription>
@@ -460,10 +502,23 @@ const PoolPage = () => {
                                 </Chart>
                             </Charts>
                         )}
+                        {pool.pool_type === 'concentrated' && (
+                            <DistributionCard>
+                                <DistributionCanvas>
+                                    <LiquidityDistributionChart pool={pool} />
+                                </DistributionCanvas>
+                            </DistributionCard>
+                        )}
 
                         <SectionRow>
                             <SectionLabel>Type:</SectionLabel>
-                            <span>{pool.pool_type === 'stable' ? 'Stable' : 'Volatile'}</span>
+                            <span>
+                                {pool.pool_type === 'stable'
+                                    ? 'Stable'
+                                    : pool.pool_type === 'concentrated'
+                                      ? 'Concentrated'
+                                      : 'Volatile'}
+                            </span>
                         </SectionRow>
                         <SectionRow>
                             <SectionLabel>Fee:</SectionLabel>
@@ -473,11 +528,9 @@ const PoolPage = () => {
                             <SectionRow key={pool.tokens_addresses[index]}>
                                 <SectionLabel>Total {asset.code}:</SectionLabel>
                                 <span>
-                                    {formatBalance(
-                                        +contractValueToAmount(
-                                            pool.reserves[index],
-                                            (pool.tokens[index] as SorobanToken).decimal,
-                                        ),
+                                    {contractValueToFormattedAmount(
+                                        pool.reserves[index],
+                                        (pool.tokens[index] as SorobanToken).decimal,
                                     )}{' '}
                                     <AssetLogo asset={asset} isSmall isCircle />
                                 </span>
@@ -486,9 +539,11 @@ const PoolPage = () => {
                         <SectionRow>
                             <SectionLabel>Total share:</SectionLabel>
                             <span>
-                                {formatBalance(
-                                    +pool.total_share / Math.pow(10, pool.share_token_decimals),
+                                {contractValueToFormattedAmount(
+                                    pool.total_share,
+                                    pool.share_token_decimals,
                                     true,
+                                    pool.pool_type === 'concentrated',
                                 )}
                             </span>
                         </SectionRow>
@@ -499,7 +554,12 @@ const PoolPage = () => {
                         <SectionRow>
                             <SectionLabel>Daily reward: </SectionLabel>
                             <span>
-                                {formatBalance((+pool.reward_tps / 1e7) * 60 * 60 * 24, true)} AQUA
+                                {contractValueToFormattedAmount(
+                                    Number(pool.reward_tps) * 60 * 60 * 24,
+                                    7,
+                                    true,
+                                )}{' '}
+                                AQUA
                             </span>
                         </SectionRow>
 
@@ -539,7 +599,12 @@ const PoolPage = () => {
 
                 <Section>
                     <SectionWrap>
-                        <PoolMembers poolId={pool.address} totalShare={pool.total_share} />
+                        <PoolMembers
+                            poolId={pool.address}
+                            totalShare={pool.total_share}
+                            shareTokenDecimals={pool.share_token_decimals}
+                            isConcentrated={pool.pool_type === POOL_TYPE.concentrated}
+                        />
                     </SectionWrap>
                 </Section>
 

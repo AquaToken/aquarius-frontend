@@ -12,6 +12,7 @@ const CreatePoolPage = lazy(() => import('./pages/CreatePool'));
 
 const Amm = () => {
     const { isLogged } = useAuthStore();
+
     return (
         <Routes>
             <Route path={AppRoutes.section.amm.child.index} element={<AnalyticsPage />} />
