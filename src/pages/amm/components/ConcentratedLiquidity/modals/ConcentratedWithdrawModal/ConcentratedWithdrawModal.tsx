@@ -66,7 +66,7 @@ const ConcentratedWithdrawModal = ({
     const [pending, setPending] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const title = 'Concentrated Withdraw';
+    const title = `Remove liquidity ${pool.tokens.map(({ code }) => code).join('/')}`;
 
     const selectedPosition = useMemo(
         () => positions.find(item => keyOfPosition(item) === selectedPositionKey) || null,

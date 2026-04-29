@@ -226,21 +226,9 @@ export const useConcentratedRangeFormState = ({
             tickToPrice(tickUpper ?? maxTickBound, decimalsDiff),
         );
 
-        if (minPriceInput !== nextMinPriceInput) {
-            setMinPriceInput(nextMinPriceInput);
-        }
-        if (maxPriceInput !== nextMaxPriceInput) {
-            setMaxPriceInput(nextMaxPriceInput);
-        }
-    }, [
-        decimalsDiff,
-        maxPriceInput,
-        maxTickBound,
-        minPriceInput,
-        minTickBound,
-        tickLower,
-        tickUpper,
-    ]);
+        setMinPriceInput(prev => (prev === nextMinPriceInput ? prev : nextMinPriceInput));
+        setMaxPriceInput(prev => (prev === nextMaxPriceInput ? prev : nextMaxPriceInput));
+    }, [decimalsDiff, maxTickBound, minTickBound, tickLower, tickUpper]);
 
     useEffect(() => {
         if (

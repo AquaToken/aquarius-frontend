@@ -101,10 +101,10 @@ const ConcentratedPoolDisclaimer = (): React.ReactNode => {
                     ☝️
                 </Emoji>
                 <Content>
-                    <Title>Experimental Feature - use at your own risk</Title>
+                    <Title>Concentrated Liquidity Pool — Security Audit in Progress</Title>
                     <Text>
-                        This feature is unaudited and may contain bugs. Deposits are at risk, and
-                        any potential compensation is limited.
+                        This pool uses a new concentrated liquidity mechanism. Deposits carry
+                        elevated risk of partial or total loss.
                     </Text>
                 </Content>
                 <ReadMoreLink onClick={openDisclaimerModal}>Read more</ReadMoreLink>

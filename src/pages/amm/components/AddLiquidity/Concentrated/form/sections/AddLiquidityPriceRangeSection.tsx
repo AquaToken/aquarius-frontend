@@ -217,6 +217,7 @@ const AddLiquidityPriceRangeSection = ({
 
                     <AddLiquidityEstimateSummary
                         pool={pool}
+                        isEmptyPool={isEmptyPool}
                         hasTickRange={hasTickRange}
                         tickLower={tickLower}
                         tickUpper={tickUpper}
