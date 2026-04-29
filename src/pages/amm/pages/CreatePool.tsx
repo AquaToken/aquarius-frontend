@@ -1,5 +1,5 @@
-import * as React from 'react';
 import BigNumber from 'bignumber.js';
+import * as React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
@@ -10,8 +10,8 @@ import { CONCENTRATED_TICK_SPACING_BY_FEE, POOL_TYPE } from 'constants/amm';
 import { AppRoutes } from 'constants/routes';
 import { CONTRACT_STATUS } from 'constants/soroban';
 
-import ErrorHandler from 'helpers/error-handler';
 import { getAssetString } from 'helpers/assets';
+import ErrorHandler from 'helpers/error-handler';
 import { formatBalance } from 'helpers/format-number';
 import { navigateBackWithFallback } from 'helpers/navigation';
 import { openCurrentWalletIfExist } from 'helpers/wallet-connect-helpers';
@@ -20,7 +20,7 @@ import { LoginTypes } from 'store/authStore/types';
 import useAuthStore from 'store/authStore/useAuthStore';
 
 import { BuildSignAndSubmitStatuses } from 'services/auth/wallet-connect/wallet-connect.service';
-import { SorobanService, ToastService } from 'services/globalServices';
+import { ModalService, SorobanService, ToastService } from 'services/globalServices';
 
 import { PoolCreationFeeInfo, PoolExtended, PoolProcessed } from 'types/amm';
 import { Transaction } from 'types/stellar';
@@ -36,6 +36,7 @@ import Button from 'basics/buttons/Button';
 import Checkbox from 'basics/inputs/Checkbox';
 import Input from 'basics/inputs/Input';
 import ToggleGroup from 'basics/inputs/ToggleGroup';
+import { BlankExternalLink } from 'basics/links';
 import PageLoader from 'basics/loaders/PageLoader';
 import Tooltip, { TOOLTIP_POSITION } from 'basics/Tooltip';
 
@@ -61,6 +62,9 @@ import AddLiquidityForm, {
     AddLiquidityFormData,
 } from '../components/AddLiquidity/Regular/AddLiquidityForm';
 import ContractNotFound from '../components/ContractNotFound/ContractNotFound';
+import ExperimentalFeatureModal, {
+    ExperimentalFeatureModalBackground,
+} from '../components/ExperimentalFeatureModal/ExperimentalFeatureModal';
 import PoolsList from '../components/PoolsList/PoolsList';
 
 const ErrorLabel = styled.span<{ $isError?: boolean }>`
@@ -203,6 +207,17 @@ const StyledCheckbox = styled(Checkbox)`
     width: fit-content;
 `;
 
+const RiskAcknowledgementCheckboxWrap = styled.div`
+    margin-top: 2.4rem;
+    padding: 2.4rem;
+    border-radius: 0.5rem;
+    background: ${COLORS.gray50};
+`;
+
+const LearnMoreLink = styled(BlankExternalLink)`
+    color: ${COLORS.purple500};
+`;
+
 const FEE_OPTIONS = [
     { value: 10, label: '0.1%' },
     { value: 30, label: '0.3%' },
@@ -275,6 +290,7 @@ const CreatePool = () => {
         useState<ConcentratedAddLiquidityFormData | null>(null);
 
     const [agreeWithFee, setAgreeWithFee] = useState(false);
+    const [agreeWithConcentratedRisk, setAgreeWithConcentratedRisk] = useState(false);
 
     const [pools, setPools] = useState<PoolProcessed[] | null>(null);
 
@@ -609,6 +625,13 @@ const CreatePool = () => {
             return;
         }
 
+        if (!agreeWithConcentratedRisk) {
+            ToastService.showErrorToast(
+                'Please acknowledge the unaudited concentrated pool risks before creating the pool',
+            );
+            return;
+        }
+
         if (
             createInfo &&
             Number(account.getAssetBalance(createInfo.token)) < Number(createInfo.concentratedFee)
@@ -670,6 +693,15 @@ const CreatePool = () => {
         }
         createConstantPool();
     };
+
+    const openConcentratedRiskModal = () =>
+        ModalService.openModal(
+            ExperimentalFeatureModal,
+            {},
+            true,
+            <ExperimentalFeatureModalBackground />,
+            true,
+        );
 
     const onStableFeeChane = (value: string) => {
         if (Number.isNaN(Number(value))) {
@@ -980,6 +1012,32 @@ const CreatePool = () => {
                                     label="I acknowledge the fee"
                                 />
                             </CreationFee>
+                        </StyledFormSection>
+                        {type === POOL_TYPE.concentrated && (
+                            <StyledFormSection>
+                                <FormSectionTitle>Risk acknowledgement</FormSectionTitle>
+                                <Alert
+                                    title="Concentrated Liquidity Pool — Security Audit in Progress"
+                                    text={
+                                        <>
+                                            This pool uses a new concentrated liquidity mechanism.
+                                            Deposits carry elevated risk of partial or total loss.{' '}
+                                            <LearnMoreLink onClick={openConcentratedRiskModal}>
+                                                Learn more
+                                            </LearnMoreLink>
+                                        </>
+                                    }
+                                />
+                                <RiskAcknowledgementCheckboxWrap>
+                                    <StyledCheckbox
+                                        checked={agreeWithConcentratedRisk}
+                                        onChange={setAgreeWithConcentratedRisk}
+                                        label="I acknowledge the risk of losing deposited funds"
+                                    />
+                                </RiskAcknowledgementCheckboxWrap>
+                            </StyledFormSection>
+                        )}
+                        <StyledFormSection>
                             <Button
                                 isBig
                                 fullWidth
@@ -1000,6 +1058,8 @@ const CreatePool = () => {
                                     ].some(status => status === CONTRACT_STATUS.NOT_FOUND) ||
                                     isStableFeeInputError ||
                                     (type === POOL_TYPE.stable && !stableFee) ||
+                                    (type === POOL_TYPE.concentrated &&
+                                        !agreeWithConcentratedRisk) ||
                                     Boolean(existingPools.length) ||
                                     !hasValidInitialDeposit
                                 }
