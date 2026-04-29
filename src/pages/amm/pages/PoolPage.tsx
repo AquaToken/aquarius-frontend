@@ -563,20 +563,17 @@ const PoolPage = () => {
                             </span>
                         </SectionRow>
 
-                        {incentives?.length
-                            ? incentives
-                                  .filter(incentive => !!Number(incentive.info.tps))
-                                  .map(incentive => (
-                                      <SectionRow key={incentive.token.contract}>
+                        {Object.values(pool.incentive_tps_per_token)?.length
+                            ? Object.entries(pool.incentive_tps_per_token)
+                                  .filter(([, tps]) => !!Number(tps))
+                                  .map(([token, tps]) => (
+                                      <SectionRow key={token}>
                                           <SectionLabel>
-                                              Daily incentive {incentive.token.code}:{' '}
+                                              Daily incentive {getAssetFromString(token).code}:{' '}
                                           </SectionLabel>
                                           <span>
-                                              {formatBalance(
-                                                  (+incentive.info.tps * DAY) / 1000,
-                                                  true,
-                                              )}{' '}
-                                              {incentive.token.code}
+                                              {formatBalance(((+tps / 1e7) * DAY) / 1000, true)}{' '}
+                                              {getAssetFromString(token).code}
                                           </span>
                                       </SectionRow>
                                   ))
