@@ -122,9 +122,7 @@ const MOCK_UPCOMING_VOTES: UpcomingVoteData[] = MOCK_UPCOMING_VOTES_ASSETS.map(
 
         return {
             startsAt: `Starts ${getDateString(startAt.getTime(), {
-                withoutYear: true,
-                withTime: true,
-            })} UTC`,
+            })}`,
             assetCode,
             assetIssuer,
             type: 'ADD_ASSET',
@@ -185,9 +183,7 @@ const AssetRegistryMainPage = () => {
                         return {
                             id: String(proposal.id),
                             startsAt: `Starts ${getDateString(startAt.getTime(), {
-                                withoutYear: true,
-                                withTime: true,
-                            })} UTC`,
+                            })}`,
                             assetCode: proposal.asset_code as string,
                             assetIssuer: proposal.asset_issuer ?? '',
                             type: proposal.proposal_type as RegistryAssetProposalType,
