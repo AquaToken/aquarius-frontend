@@ -8,7 +8,7 @@ import { Proposal, ProposalSimple } from 'types/governance';
 import { flexAllCenter } from 'styles/mixins';
 import { COLORS } from 'styles/style-constants';
 
-import { SummaryTitle, SummaryValue } from '../ProposalPreview';
+import { SummaryTitle } from '../ProposalPreview';
 
 const ProgressLine = styled.div`
     width: 100%;
@@ -25,9 +25,15 @@ const Label = styled.div`
     margin-bottom: 1.2rem;
 `;
 
-const EmptyValue = styled(SummaryValue)<{ $isCompact?: boolean }>`
+const EmptyValue = styled.div<{ $isCompact?: boolean }>`
+    font-weight: 400;
     font-size: ${({ $isCompact }) => ($isCompact ? '1.4rem' : '1.6rem')};
     line-height: ${({ $isCompact }) => ($isCompact ? '2rem' : '2.4rem')};
+    color: ${COLORS.textTertiary};
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
 `;
 
 const Vote = styled.div`
