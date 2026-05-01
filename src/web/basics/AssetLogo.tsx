@@ -159,11 +159,27 @@ const AssetLogo = ({
     const { assetsInfo } = useAssetsStore();
 
     if (!asset.type && !(asset as ClassicToken).issuer) {
-        return <Unknown $isSmall={isSmall} $isBig={isBig} $isCircle={isCircle} {...props} />;
+        return (
+            <Unknown
+                $isSmall={isSmall}
+                $isBig={isBig}
+                $isCircle={isCircle}
+                $size={size}
+                {...props}
+            />
+        );
     }
 
     if (asset.type === TokenType.soroban) {
-        return <Soroban $isSmall={isSmall} $isBig={isBig} $isCircle={isCircle} {...props} />;
+        return (
+            <Soroban
+                $isSmall={isSmall}
+                $isBig={isBig}
+                $isCircle={isCircle}
+                $size={size}
+                {...props}
+            />
+        );
     }
 
     const assetInstance = createAsset(asset.code, asset.issuer);
@@ -188,7 +204,15 @@ const AssetLogo = ({
     }
 
     if (logoUrl === null || isErrorLoad) {
-        return <Unknown $isSmall={isSmall} $isBig={isBig} $isCircle={isCircle} {...props} />;
+        return (
+            <Unknown
+                $isSmall={isSmall}
+                $isBig={isBig}
+                $isCircle={isCircle}
+                $size={size}
+                {...props}
+            />
+        );
     }
 
     return (

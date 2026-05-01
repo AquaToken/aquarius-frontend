@@ -1,3 +1,4 @@
+import BigNumber from 'bignumber.js';
 import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -6,12 +7,14 @@ import styled from 'styled-components';
 import { getUserPools } from 'api/amm';
 
 import { POOL_TYPE } from 'constants/amm';
-import { DAY } from 'constants/intervals';
 import { AppRoutes } from 'constants/routes';
 
-import { contractValueToAmount } from 'helpers/amount';
+import { loadConcentratedUserPositions } from 'helpers/amm-concentrated-user-positions';
+import { apyValueToDisplay, contractValueToAmount } from 'helpers/amount';
 import { getAssetString } from 'helpers/assets';
 import { formatBalance } from 'helpers/format-number';
+import { getPercentValue } from 'helpers/number';
+import { calculateBoostValue, calculateDailyRewards } from 'helpers/rewards';
 import { openCurrentWalletIfExist } from 'helpers/wallet-connect-helpers';
 
 import { useUpdateIndex } from 'hooks/useUpdateIndex';
@@ -34,13 +37,15 @@ import { SorobanToken, Token } from 'types/token';
 import ChooseLoginMethodModal from 'web/modals/auth/ChooseLoginMethodModal';
 
 import IconClaim from 'assets/icons/actions/icon-claim-17x16.svg';
+import Lock from 'assets/icons/objects/icon-lock-16.svg';
 import Info from 'assets/icons/status/icon-info-16.svg';
 
 import AssetLogo from 'basics/AssetLogo';
 import Button from 'basics/buttons/Button';
 import Select from 'basics/inputs/Select';
 import ToggleGroup from 'basics/inputs/ToggleGroup';
-import { CircleLoader } from 'basics/loaders';
+import Label from 'basics/Label';
+import { CircleLoader, DotsLoader } from 'basics/loaders';
 import PageLoader from 'basics/loaders/PageLoader';
 import Market from 'basics/Market';
 import Table, { CellAlign } from 'basics/Table';
@@ -53,7 +58,7 @@ import {
     respondDown,
     textEllipsis,
 } from 'styles/mixins';
-import { Breakpoints, COLORS } from 'styles/style-constants';
+import { Breakpoints, COLORS, FONT_SIZE, hexWithOpacity } from 'styles/style-constants';
 
 import { TitleWithTooltip, TooltipInnerHead } from 'pages/amm/components/AllPools/AllPools';
 import ExpandedMenu from 'pages/amm/components/MyLiquidity/ExpandedMenu/ExpandedMenu';
@@ -164,6 +169,7 @@ const TooltipInner = styled.div`
     flex-direction: column;
     gap: 1.5rem;
     padding: 1.5rem;
+    min-width: 24rem;
     max-width: calc(100vw - 12rem);
 `;
 
@@ -192,10 +198,19 @@ const IconInfoStyled = styled(Info)`
     cursor: help;
 `;
 
+const LabelInner = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 400;
+    ${FONT_SIZE.sm};
+`;
+
 enum FilterValues {
     all = 'all',
     volatile = 'volatile',
     stable = 'stable',
+    concentrated = 'concentrated',
     classic = 'classic',
 }
 
@@ -207,6 +222,7 @@ const FilterOptions = [
     { label: 'All', value: FilterValues.all },
     { label: 'Stable', value: FilterValues.stable },
     { label: 'Volatile', value: FilterValues.volatile },
+    { label: 'Concentrated', value: FilterValues.concentrated },
     { label: 'Classic', value: FilterValues.classic },
 ];
 
@@ -228,6 +244,9 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
     const [incentivesSum, setIncentivesSum] = useState(new Map());
     const [isUserIncentivesLoaded, setIsUserIncentivesLoaded] = useState(false);
     const [claimPendingId, setClaimPendingId] = useState(null);
+    const [concentratedData, setConcentratedData] = useState<
+        Map<string, { tokenEstimates: string[]; liquidityUsd: number; rawLiquidity: string }>
+    >(new Map());
 
     const { value: filter, setValue: setFilter } = useUrlParam<FilterValues>(
         MyLiquidityUrlParams.filter,
@@ -235,6 +254,24 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
     );
 
     const updateIndex = useUpdateIndex(5000);
+
+    const filteredPools = useMemo(() => {
+        if (!classicPools || !pools) return null;
+
+        if (filter === FilterValues.classic) {
+            return classicPools;
+        }
+        if (filter === FilterValues.volatile) {
+            return pools.filter(({ pool_type }) => pool_type === POOL_TYPE.constant);
+        }
+        if (filter === FilterValues.stable) {
+            return pools.filter(({ pool_type }) => pool_type === POOL_TYPE.stable);
+        }
+        if (filter === FilterValues.concentrated) {
+            return pools.filter(({ pool_type }) => pool_type === POOL_TYPE.concentrated);
+        }
+        return [...pools, ...classicPools];
+    }, [classicPools, pools, filter]);
 
     const updateData = () => {
         if (account) {
@@ -313,6 +350,67 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
         updateData();
     }, [account, updateIndex]);
 
+    useEffect(() => {
+        if (!account || !pools) {
+            setConcentratedData(new Map());
+            return;
+        }
+
+        const concentratedPools = pools.filter(
+            ({ pool_type }) => pool_type === POOL_TYPE.concentrated,
+        );
+
+        if (!concentratedPools.length) {
+            setConcentratedData(new Map());
+            return;
+        }
+
+        let cancelled = false;
+
+        Promise.all(
+            concentratedPools.map(pool =>
+                loadConcentratedUserPositions(pool, account.accountId())
+                    .then(({ positions, rawLiquidity }) => ({
+                        address: pool.address,
+                        tokenEstimates: pool.tokens.map((_, index) =>
+                            positions
+                                .reduce(
+                                    (acc, position) =>
+                                        acc.plus(position.tokenEstimates[index] || '0'),
+                                    new BigNumber(0),
+                                )
+                                .toFixed(),
+                        ),
+                        liquidityUsd: positions.reduce(
+                            (acc, position) => acc + (position.liquidityUsd || 0),
+                            0,
+                        ),
+                        rawLiquidity,
+                    }))
+                    .catch(() => ({
+                        address: pool.address,
+                        tokenEstimates: pool.tokens.map(() => '0'),
+                        liquidityUsd: 0,
+                        rawLiquidity: '0',
+                    })),
+            ),
+        ).then(results => {
+            if (cancelled) return;
+            const map = new Map<
+                string,
+                { tokenEstimates: string[]; liquidityUsd: number; rawLiquidity: string }
+            >();
+            results.forEach(({ address, tokenEstimates, liquidityUsd, rawLiquidity }) => {
+                map.set(address, { tokenEstimates, liquidityUsd, rawLiquidity });
+            });
+            setConcentratedData(map);
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [pools, account, updateIndex]);
+
     const { totalLiquidity, poolsLiquidity } = useMemo(() => {
         const map = new Map<string, number>();
 
@@ -321,6 +419,13 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
         }
 
         const totalSorobanUsd = pools.reduce((acc, pool) => {
+            if (pool.pool_type === POOL_TYPE.concentrated) {
+                const usd = concentratedData.get(pool.address)?.liquidityUsd ?? 0;
+                map.set(pool.address, usd);
+                acc += usd;
+                return acc;
+            }
+
             const balance = Number(pool.balance) / 1e7;
             const liquidity = Number(pool.liquidity_usd) / 1e7;
             const totalShare = Number(pool.total_share) / 1e7;
@@ -351,7 +456,7 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
             setTotal(total);
         }
         return { totalLiquidity: total, poolsLiquidity: map };
-    }, [pools, classicPools]);
+    }, [pools, classicPools, concentratedData]);
 
     const claim = (poolId: string) => {
         if (account.authType === LoginTypes.walletConnect) {
@@ -393,55 +498,6 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
                 setClaimPendingId(null);
             });
     };
-
-    const calculateBoostValue = (rewardsInfo: PoolRewardsInfo, userBalance: string) => {
-        if (!rewardsInfo) return 0;
-        const tps = +rewardsInfo.tps;
-        const wSupply = +rewardsInfo.working_supply;
-        const wBalance = +rewardsInfo.working_balance;
-
-        if (!tps || !wSupply || !wBalance) return 1;
-
-        const tpsWithoutBoost = ((+userBalance / 1e7) * tps) / wSupply;
-        const expectedTps = (tps * wBalance) / wSupply;
-
-        if (tpsWithoutBoost === 0) return 1;
-
-        return expectedTps / tpsWithoutBoost;
-    };
-
-    const calculateDailyRewards = (rewardsInfo: PoolRewardsInfo) => {
-        if (!rewardsInfo) return 0;
-
-        if (rewardsInfo.exp_at * 1000 < Date.now()) return 0;
-        const tps = +rewardsInfo.tps;
-        const wSupply = +rewardsInfo.working_supply;
-        const wBalance = +rewardsInfo.working_balance;
-
-        return (((+tps * DAY) / 1000) * +wBalance) / +wSupply;
-    };
-
-    const filteredPools = useMemo(() => {
-        if (!classicPools || !pools) return null;
-
-        let result;
-
-        if (filter === FilterValues.classic) {
-            result = [...classicPools];
-        } else if (filter === FilterValues.volatile) {
-            result = pools.filter(({ pool_type }) => pool_type === POOL_TYPE.constant);
-        } else if (filter === FilterValues.stable) {
-            result = pools.filter(({ pool_type }) => pool_type === POOL_TYPE.stable);
-        } else {
-            result = [...pools, ...classicPools];
-        }
-
-        return result.sort((a, b) => {
-            const aLiquidity = poolsLiquidity.get(a.address || a.id) ?? 0;
-            const bLiquidity = poolsLiquidity.get(b.address || b.id) ?? 0;
-            return bLiquidity - aLiquidity;
-        });
-    }, [classicPools, pools, filter, poolsLiquidity]);
 
     if (!account) {
         return (
@@ -495,7 +551,7 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
                 <PageLoader />
             ) : filteredPools.length ? (
                 <Table
-                    mobileBreakpoint={Breakpoints.lg}
+                    mobileBreakpoint={Breakpoints.xl}
                     head={[
                         {
                             children: 'Pool',
@@ -535,22 +591,41 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
                         {
                             children: 'Total APR',
                             align: CellAlign.Left,
-                            flexSize: 2,
+                            flexSize: 2.5,
                             style: { paddingLeft: '5rem' },
                         },
                         { children: '' },
                     ]}
                     body={filteredPools.map(pool => {
                         const userRewardsForPool = userRewards.get(pool.address);
-                        const boostValue = calculateBoostValue(userRewardsForPool, pool.balance);
 
-                        const dailyRewards = calculateDailyRewards(userRewardsForPool);
+                        const isRewardsExpired =
+                            userRewardsForPool?.exp_at &&
+                            userRewardsForPool?.exp_at * 1000 < Date.now();
+
+                        const boostValue = calculateBoostValue(
+                            +userRewardsForPool?.working_balance,
+                            contractValueToAmount(pool.balance),
+                        );
+
+                        const dailyRewards =
+                            userRewardsForPool && !isRewardsExpired
+                                ? calculateDailyRewards(
+                                      +userRewardsForPool?.tps,
+                                      +userRewardsForPool?.working_balance,
+                                      +userRewardsForPool?.working_supply,
+                                  )
+                                : 0;
 
                         const incentivesForPool = userIncentives
                             .get(pool.address)
                             ?.filter(incentive => !!Number(incentive.info.user_reward));
 
                         const userRewardsValue = +userRewards.get(pool.address)?.to_claim;
+
+                        const isConcentratedLoading =
+                            pool.pool_type === POOL_TYPE.concentrated &&
+                            !concentratedData.has(pool.address);
 
                         return {
                             key: pool.address || pool.id,
@@ -573,64 +648,117 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
                                     children: poolsLiquidity.has(pool.address || pool.id) ? (
                                         <Pooled>
                                             <span>
-                                                $
-                                                {formatBalance(
-                                                    poolsLiquidity.get(pool.address || pool.id),
-                                                    true,
+                                                {isConcentratedLoading ? (
+                                                    <DotsLoader />
+                                                ) : (
+                                                    `$${formatBalance(
+                                                        poolsLiquidity.get(pool.address || pool.id),
+                                                        true,
+                                                    )}`
                                                 )}
                                             </span>
                                             <Tooltip
                                                 content={
                                                     <TooltipInner>
-                                                        {pool.tokens.map((asset, index) => (
-                                                            <TooltipRow key={getAssetString(asset)}>
-                                                                <span>Pooled {asset.code}</span>
-                                                                <span>
-                                                                    {formatBalance(
-                                                                        (+contractValueToAmount(
-                                                                            pool.reserves[index],
-                                                                            (
-                                                                                pool.tokens[
-                                                                                    index
-                                                                                ] as SorobanToken
-                                                                            ).decimal,
-                                                                        ) *
-                                                                            +pool.balance) /
-                                                                            +pool.total_share,
-                                                                        true,
-                                                                    )}
-                                                                    <AssetLogo
-                                                                        asset={asset}
-                                                                        isSmall
-                                                                        isCircle
-                                                                    />
-                                                                </span>
-                                                            </TooltipRow>
-                                                        ))}
+                                                        {pool.tokens.map((asset, index) => {
+                                                            const isConcentrated =
+                                                                pool.pool_type ===
+                                                                POOL_TYPE.concentrated;
+                                                            const concentratedAmount =
+                                                                isConcentrated
+                                                                    ? Number(
+                                                                          concentratedData.get(
+                                                                              pool.address,
+                                                                          )?.tokenEstimates[
+                                                                              index
+                                                                          ] || '0',
+                                                                      )
+                                                                    : 0;
+                                                            const amount = isConcentrated
+                                                                ? concentratedAmount
+                                                                : (+contractValueToAmount(
+                                                                      pool.reserves[index],
+                                                                      (
+                                                                          pool.tokens[
+                                                                              index
+                                                                          ] as SorobanToken
+                                                                      ).decimal,
+                                                                  ) *
+                                                                      +pool.balance) /
+                                                                  +pool.total_share;
+
+                                                            return (
+                                                                <TooltipRow
+                                                                    key={getAssetString(asset)}
+                                                                >
+                                                                    <span>Pooled {asset.code}</span>
+                                                                    <span>
+                                                                        {isConcentratedLoading ? (
+                                                                            <DotsLoader />
+                                                                        ) : (
+                                                                            formatBalance(
+                                                                                amount,
+                                                                                true,
+                                                                            )
+                                                                        )}
+                                                                        <AssetLogo
+                                                                            asset={asset}
+                                                                            isSmall
+                                                                            isCircle
+                                                                        />
+                                                                    </span>
+                                                                </TooltipRow>
+                                                            );
+                                                        })}
                                                         <TooltipRow>
                                                             <span>Shares</span>
                                                             <span>
-                                                                {formatBalance(
-                                                                    pool.balance / 1e7,
-                                                                    true,
-                                                                )}{' '}
-                                                                (
-                                                                {+(
-                                                                    (100 * pool.balance) /
-                                                                    Number(pool.total_share)
-                                                                ) > 0.01
-                                                                    ? formatBalance(
-                                                                          +(
-                                                                              (100 *
-                                                                                  +pool.balance) /
-                                                                              Number(
-                                                                                  pool.total_share,
+                                                                {isConcentratedLoading ? (
+                                                                    <DotsLoader />
+                                                                ) : pool.pool_type ===
+                                                                  POOL_TYPE.concentrated ? (
+                                                                    formatBalance(
+                                                                        Number(
+                                                                            contractValueToAmount(
+                                                                                concentratedData.get(
+                                                                                    pool.address,
+                                                                                )?.rawLiquidity ||
+                                                                                    '0',
+                                                                                pool.share_token_decimals,
+                                                                            ),
+                                                                        ),
+                                                                        true,
+                                                                        true,
+                                                                        pool.share_token_decimals,
+                                                                    )
+                                                                ) : (
+                                                                    formatBalance(
+                                                                        pool.balance / 1e7,
+                                                                        true,
+                                                                    )
+                                                                )}
+                                                                {pool.pool_type !==
+                                                                    POOL_TYPE.concentrated && (
+                                                                    <>
+                                                                        {' '}
+                                                                        (
+                                                                        {+getPercentValue(
+                                                                            pool.balance,
+                                                                            pool.total_share,
+                                                                            2,
+                                                                        ) > 0.01
+                                                                            ? formatBalance(
+                                                                                  +getPercentValue(
+                                                                                      pool.balance,
+                                                                                      pool.total_share,
+                                                                                      2,
+                                                                                  ),
+                                                                                  true,
                                                                               )
-                                                                          ).toFixed(2),
-                                                                          true,
-                                                                      )
-                                                                    : '< 0.01'}
-                                                                %)
+                                                                            : '< 0.01'}
+                                                                        %)
+                                                                    </>
+                                                                )}
                                                             </span>
                                                         </TooltipRow>
                                                     </TooltipInner>
@@ -653,9 +781,26 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
                                     align: CellAlign.Right,
                                 },
                                 {
-                                    children: Number(dailyRewards)
-                                        ? `${formatBalance(dailyRewards, true, true)} AQUA`
-                                        : '-',
+                                    children:
+                                        pool.pool_type !== POOL_TYPE.classic &&
+                                        !pool.rewards_enabled ? (
+                                            <Label
+                                                labelText={
+                                                    <LabelInner>
+                                                        <Lock /> <span>Disabled</span>
+                                                    </LabelInner>
+                                                }
+                                                background={COLORS.gray100}
+                                                color={COLORS.textGray}
+                                                withoutBorder
+                                                labelSize="medium"
+                                                withoutUppercase
+                                            />
+                                        ) : Number(dailyRewards) ? (
+                                            `${formatBalance(dailyRewards, true, true)} AQUA`
+                                        ) : (
+                                            '-'
+                                        ),
                                     label: (
                                         <TitleWithTooltip>
                                             Daily Rewards
@@ -695,10 +840,21 @@ const MyLiquidity = ({ setTotal, onlyList, backToAllPools }: MyLiquidityProps) =
                                     },
                                 },
                                 {
-                                    children: <TotalApy pool={pool} userBoost={boostValue} />,
+                                    children: pool.rewards_enabled ? (
+                                        <TotalApy pool={pool} userBoost={boostValue} />
+                                    ) : (
+                                        <Label
+                                            labelText={apyValueToDisplay(pool.apy)}
+                                            labelSize="extraLarge"
+                                            background={hexWithOpacity(COLORS.gray200, 20)}
+                                            color={COLORS.textTertiary}
+                                            withoutBorder
+                                            fontWeight={400}
+                                        />
+                                    ),
                                     label: 'Total APR',
                                     align: CellAlign.Left,
-                                    flexSize: 2,
+                                    flexSize: 2.5,
                                     style: {
                                         marginLeft: '5rem',
                                     },

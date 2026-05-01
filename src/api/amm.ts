@@ -2,6 +2,9 @@ import { Asset } from '@stellar/stellar-sdk';
 import axios from 'axios';
 import BigNumber from 'bignumber.js';
 
+import { POOL_TYPE } from 'constants/amm';
+
+import { hydratePositionsLiquidity, normalizePositions } from 'helpers/amm-concentrated-positions';
 import { getEnvClassicAssetData } from 'helpers/assets';
 import chunkFunction from 'helpers/chunk-function';
 import { getNetworkPassphrase } from 'helpers/env';
@@ -35,12 +38,14 @@ export enum FilterOptions {
     all = 'all',
     stable = 'stable',
     constant = 'volatile',
+    concentrated = 'concentrated',
 }
 
 const FilterOptionsMap = {
     [FilterOptions.all]: '',
     [FilterOptions.stable]: 'stable',
     [FilterOptions.constant]: 'constant_product',
+    [FilterOptions.concentrated]: 'concentrated',
 };
 
 export enum PoolsSortFields {
@@ -227,15 +232,89 @@ export const getAmmAquaBalance = async (accountId: string): Promise<number> => {
         `${baseUrl}/pools/user/${accountId}/?size=1000&tokens__in=${aquaContract}`,
     );
 
-    const aquaSum: BigNumber = data.items.reduce((acc, item) => {
-        const aquaIndex = item.tokens_str.findIndex(str => str === aquaAssetString);
-        const aquaAmount = new BigNumber(item.reserves[aquaIndex])
-            .div(1e7)
-            .times(new BigNumber(item.balance))
-            .div(new BigNumber(item.total_share));
-        acc = acc.plus(aquaAmount);
-        return acc;
-    }, new BigNumber(0));
+    const pools = await processPools(data.items);
+
+    const aquaAmounts = await Promise.all(
+        pools.map(async item => {
+            if (item.pool_type !== POOL_TYPE.concentrated) {
+                const aquaIndex = item.tokens_str.findIndex(str => str === aquaAssetString);
+
+                if (aquaIndex < 0 || !Number(item.total_share)) {
+                    return new BigNumber(0);
+                }
+
+                return new BigNumber(item.reserves[aquaIndex])
+                    .div(1e7)
+                    .times(new BigNumber(item.balance))
+                    .div(new BigNumber(item.total_share));
+            }
+
+            try {
+                const snapshot = await SorobanService.amm.getUserPositionSnapshot(
+                    item.address,
+                    accountId,
+                );
+                const ranges = normalizePositions(snapshot);
+
+                if (!ranges.length) {
+                    return new BigNumber(0);
+                }
+
+                const hydrated = await hydratePositionsLiquidity(ranges, async range => {
+                    const position = await SorobanService.amm.getPosition(
+                        item.address,
+                        accountId,
+                        range.tickLower,
+                        range.tickUpper,
+                    );
+
+                    return position?.liquidity;
+                });
+
+                const positions = hydrated.filter(position =>
+                    new BigNumber(position.liquidity || '0').gt(0),
+                );
+
+                if (!positions.length) {
+                    return new BigNumber(0);
+                }
+
+                const positionAmounts = await Promise.all(
+                    positions.map(async position => {
+                        try {
+                            const orderedTokens = [...item.tokens];
+                            const estimates = await SorobanService.amm.estimateWithdrawPosition(
+                                accountId,
+                                item.address,
+                                orderedTokens,
+                                position.tickLower,
+                                position.tickUpper,
+                                String(position.liquidity || '0'),
+                            );
+                            const aquaIndex = orderedTokens.findIndex(
+                                token => token.contract === aquaContract,
+                            );
+
+                            return new BigNumber(
+                                aquaIndex >= 0 ? estimates[aquaIndex] || '0' : '0',
+                            );
+                        } catch {
+                            return new BigNumber(0);
+                        }
+                    }),
+                );
+
+                return positionAmounts.reduce((acc, amount) => acc.plus(amount), new BigNumber(0));
+            } catch {
+                return new BigNumber(0);
+            }
+        }),
+    );
+
+    const aquaSum: BigNumber = aquaAmounts.reduce(
+        (acc, amount) => acc.plus(amount),
+        new BigNumber(0),
+    );
 
     return aquaSum.toNumber();
 };
@@ -477,7 +556,7 @@ export const getUserRewardsList = async (accountId: string): Promise<UserReward[
 
     const processed = await processPools(data.items);
 
-    const chunked = chunkArray(processed);
+    const chunked = chunkArray(processed, 4);
 
     await chunkFunction(chunked, async chunk => {
         const rewards = await SorobanService.amm.getPoolsRewards(
