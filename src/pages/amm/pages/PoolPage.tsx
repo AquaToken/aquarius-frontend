@@ -12,7 +12,7 @@ import { DAY } from 'constants/intervals';
 import { AppRoutes } from 'constants/routes';
 
 import { contractValueToFormattedAmount } from 'helpers/amount';
-import { getAquaAssetData, getAssetFromString, getAssetString } from 'helpers/assets';
+import { getAssetFromString, getAssetString, getEnvClassicAssetData } from 'helpers/assets';
 import getExplorerLink, { ExplorerSection } from 'helpers/explorer-links';
 import { formatBalance } from 'helpers/format-number';
 import { navigateBackWithFallback } from 'helpers/navigation';
@@ -237,7 +237,7 @@ const PoolPage = () => {
 
     const updateIndex = useUpdateIndex(5000);
 
-    const { aquaStellarAsset } = getAquaAssetData();
+    const { asset: aquaStellarAsset } = getEnvClassicAssetData('aqua');
 
     const chartRef = useRef<HTMLDivElement>(null);
 

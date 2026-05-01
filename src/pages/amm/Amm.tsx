@@ -23,7 +23,7 @@ const Amm = () => {
                     isLogged ? (
                         <CreatePoolPage />
                     ) : (
-                        <Navigate to={AppRoutes.section.amm.child.index} replace />
+                        <Navigate to={AppRoutes.section.amm.base} replace />
                     )
                 }
             />

@@ -3,22 +3,26 @@ import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import styled, { css } from 'styled-components';
 
+import { getActiveRegistryVotingRequest } from 'api/asset-registry';
 import { getActiveProposalsCount } from 'api/governance';
 
 import { AppRoutes } from 'constants/routes';
 
-import { getAquaAssetData, getAssetString } from 'helpers/assets';
+import { getAssetString, getEnvClassicAssetData } from 'helpers/assets';
 import { createLumen } from 'helpers/token';
 
 import useAuthStore from 'store/authStore/useAuthStore';
 
 import { ModalService } from 'services/globalServices';
 
+import { Proposal } from 'types/governance';
+
 import ChooseLoginMethodModal from 'web/modals/auth/ChooseLoginMethodModal';
 
 import AquaLogo from 'assets/aqua/aqua-logo-text.svg';
 import IconProfile from 'assets/icons/nav/icon-profile.svg';
 
+import ActiveAssetProposal from 'components/Header/ActiveAssetProposal/ActiveAssetProposal';
 import { ActiveProposals } from 'components/Header/ActiveProposals/ActiveProposals';
 import ExpandedMenu from 'components/Header/ExpandedMenu/ExpandedMenu';
 
@@ -221,12 +225,24 @@ const MyAquarius = styled(NavLink)`
 
 const Links = () => {
     const [proposalsCounts, setProposalsCounts] = useState({ active: 0, discussion: 0 });
+    const [activeAssetProposal, setActiveAssetProposal] = useState<Proposal | null>(null);
 
     useEffect(() => {
         getActiveProposalsCount().then(res => {
             setProposalsCounts(res);
         });
+
+        getActiveRegistryVotingRequest()
+            .then(setActiveAssetProposal)
+            .catch(() => {
+                setActiveAssetProposal(null);
+            });
     }, []);
+
+    const activeAssetIndicator = activeAssetProposal ? (
+        <ActiveAssetProposal proposal={activeAssetProposal} />
+    ) : null;
+
     return (
         <>
             <NavLinkStyled
@@ -239,7 +255,7 @@ const Links = () => {
             <NavLinkStyled
                 to={AppRoutes.section.swap.to.index({
                     source: getAssetString(createLumen()),
-                    destination: getAquaAssetData().aquaAssetString,
+                    destination: getEnvClassicAssetData('aqua').assetString,
                 })}
                 style={({ isActive }) => (isActive ? { fontWeight: 700 } : undefined)}
                 title="Swap"
@@ -281,6 +297,7 @@ const Links = () => {
             <ExpandedMenu
                 title="DAO"
                 counts={proposalsCounts}
+                indicator={activeAssetIndicator}
                 links={
                     <>
                         <NavLinkStyled
@@ -291,6 +308,19 @@ const Links = () => {
                         >
                             Liquidity Voting
                         </NavLinkStyled>
+
+                        <NavLinkWithCount>
+                            <NavLinkStyled
+                                to={AppRoutes.section.assetRegistry.link.index}
+                                style={({ isActive }) =>
+                                    isActive ? { fontWeight: 700 } : undefined
+                                }
+                                title="Asset Registry"
+                            >
+                                Asset Registry
+                            </NavLinkStyled>
+                            {activeAssetIndicator}
+                        </NavLinkWithCount>
 
                         <NavLinkWithCount>
                             <NavLinkStyled
