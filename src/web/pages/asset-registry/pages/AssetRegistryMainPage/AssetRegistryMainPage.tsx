@@ -71,68 +71,64 @@ const DEFAULT_REGISTRY_ASSETS: RegistryAsset[] = [
 const getRegistryAssetId = (asset: RegistryAsset) =>
     `${asset.asset_code ?? 'unknown'}:${asset.asset_issuer ?? 'native'}`;
 
-const MOCK_UPCOMING_VOTES: UpcomingVoteData[] = [
+const MOCK_UPCOMING_VOTES_ASSETS: Array<Pick<UpcomingVoteData, 'assetCode' | 'assetIssuer'>> = [
     {
-        startsAt: 'Starts May 4, 00:00 UTC',
         assetCode: 'sUSD',
         assetIssuer: 'GCHW7CWI7GMIYQYFXMFJNJX5645XGWIINIAEQK3SABQO6CAYL5T7JYIH',
-        type: 'ADD_ASSET',
     },
     {
-        startsAt: 'Starts May 11, 00:00 UTC',
-        assetCode: 'USDP',
-        assetIssuer: 'GDTEQF6YGCKLIBD37RJZE5GTL3ZY6CBQIKH7COAW654SYEBE6XJJOLOW',
-        type: 'ADD_ASSET',
+        assetCode: 'PYUSD',
+        assetIssuer: 'GDQE7IXJ4HUHV6RQHIUPRJSEZE4DRS5WY577O2FY6YQ5LVWZ7JZTU2V5',
     },
     {
-        startsAt: 'Starts May 18, 00:00 UTC',
-        assetCode: 'AQUAmb',
-        assetIssuer: 'GDXF6SYWIQOKOZ7BACXHBFBLQZEIH25KOTTLWQK35GO3JKRNIFHHGBPC',
-        type: 'ADD_ASSET',
-    },
-    {
-        startsAt: 'Starts May 25, 00:00 UTC',
-        assetCode: 'yXLM',
-        assetIssuer: 'GARDNV3Q7YGT4AKSDF25LT32YSCCW4EV22Y2TV3I2PU2MMXJTEDL5T55',
-        type: 'ADD_ASSET',
-    },
-    {
-        startsAt: 'Starts Jun 1, 00:00 UTC',
         assetCode: 'ESP',
         assetIssuer: 'GD2JVUJNJFJTV3P3DACOQNILC2HDHDQAIX76UNUCMAAKCCT7MVW4OFEW',
-        type: 'ADD_ASSET',
     },
     {
-        startsAt: 'Starts Jun 8, 00:00 UTC',
-        assetCode: 'RAYO',
-        assetIssuer: 'GBPDJLJ23JEKXV5VVDD3FVNPW5XRRZPK6PCHWRIKM2STZ57423B6IXSQ',
-        type: 'ADD_ASSET',
+        assetCode: 'USDP',
+        assetIssuer: 'GDTEQF6YGCKLIBD37RJZE5GTL3ZY6CBQIKH7COAW654SYEBE6XJJOLOW',
     },
     {
-        startsAt: 'Starts Jun 15, 00:00 UTC',
+        assetCode: 'AQUAmb',
+        assetIssuer: 'GDXF6SYWIQOKOZ7BACXHBFBLQZEIH25KOTTLWQK35GO3JKRNIFHHGBPC',
+    },
+    {
+        assetCode: 'yXLM',
+        assetIssuer: 'GARDNV3Q7YGT4AKSDF25LT32YSCCW4EV22Y2TV3I2PU2MMXJTEDL5T55',
+    },
+    {
         assetCode: 'SHX',
         assetIssuer: 'GDSTRSHXHGJ7ZIVRBXEYE5Q74XUVCUSEKEBR7UCHEUUEK72N7I7KJ6JH',
-        type: 'ADD_ASSET',
     },
     {
-        startsAt: 'Starts Jun 22, 00:00 UTC',
-        assetCode: 'ETH',
-        assetIssuer: 'GBFXOHVAS43OIWNIO7XLRJAHT3BICFEIKOJLZVXNT572MISM4CMGSOCC',
-        type: 'ADD_ASSET',
+        assetCode: 'RAYO',
+        assetIssuer: 'GBPDJLJ23JEKXV5VVDD3FVNPW5XRRZPK6PCHWRIKM2STZ57423B6IXSQ',
     },
     {
-        startsAt: 'Starts Jun 29, 00:00 UTC',
         assetCode: 'yUSDC',
         assetIssuer: 'GDGTVWSM4MGS4T7Z6W4RPWOCHE2I6RDFCIFZGS3DOA63LWQTRNZNTTFF',
-        type: 'ADD_ASSET',
     },
     {
-        startsAt: 'Starts Jul 6, 00:00 UTC',
-        assetCode: 'XRF',
-        assetIssuer: 'GCHI6I3X62ND5XUMWINNNKXS2HPYZWKFQBZZYBSMHJ4MIP2XJXSZTXRF',
-        type: 'ADD_ASSET',
+        assetCode: 'ETH',
+        assetIssuer: 'GBFXOHVAS43OIWNIO7XLRJAHT3BICFEIKOJLZVXNT572MISM4CMGSOCC',
     },
 ];
+
+const MOCK_UPCOMING_VOTES: UpcomingVoteData[] = MOCK_UPCOMING_VOTES_ASSETS.map(
+    ({ assetCode, assetIssuer }, index) => {
+        const startAt = convertLocalDateToUTCIgnoringTimezone(
+            new Date(Date.UTC(2026, 4, 4 + index * 7, 0, 0, 0)),
+        );
+
+        return {
+            startsAt: `Starts ${getDateString(startAt.getTime(), {
+            })}`,
+            assetCode,
+            assetIssuer,
+            type: 'ADD_ASSET',
+        };
+    },
+);
 
 const AssetRegistryMainPage = () => {
     const [filter, setFilter] = useState(AssetRegistryFilter.all);
@@ -187,9 +183,7 @@ const AssetRegistryMainPage = () => {
                         return {
                             id: String(proposal.id),
                             startsAt: `Starts ${getDateString(startAt.getTime(), {
-                                withoutYear: true,
-                                withTime: true,
-                            })} UTC`,
+                            })}`,
                             assetCode: proposal.asset_code as string,
                             assetIssuer: proposal.asset_issuer ?? '',
                             type: proposal.proposal_type as RegistryAssetProposalType,
