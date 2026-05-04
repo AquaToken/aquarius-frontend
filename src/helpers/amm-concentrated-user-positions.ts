@@ -15,6 +15,9 @@ import {
     normalizePositions,
 } from './amm-concentrated-positions';
 
+const mapAmountsByTokenContract = (tokens: PoolProcessed['tokens'], amounts: string[]) =>
+    new Map(tokens.map((token, index) => [token.contract, amounts[index] || '0']));
+
 export const loadConcentratedUserPositions = async (
     pool: PoolProcessed,
     accountId?: string,
@@ -62,14 +65,42 @@ export const loadConcentratedUserPositions = async (
     const positions = await Promise.all(
         nonEmptyPositions.map(async position => {
             try {
-                const tokenEstimates = await SorobanService.amm.estimateWithdrawPosition(
-                    accountId,
-                    pool.address,
-                    pool.tokens,
-                    position.tickLower,
-                    position.tickUpper,
-                    String(position.liquidity || '0'),
+                const withdrawTokens = [...pool.tokens];
+                const feeTokens = [...pool.tokens];
+
+                const [withdrawEstimates, feeEstimates] = await Promise.all([
+                    SorobanService.amm.estimateWithdrawPosition(
+                        accountId,
+                        pool.address,
+                        withdrawTokens,
+                        position.tickLower,
+                        position.tickUpper,
+                        String(position.liquidity || '0'),
+                    ),
+                    SorobanService.amm.getPositionFees(
+                        pool.address,
+                        accountId,
+                        feeTokens,
+                        position.tickLower,
+                        position.tickUpper,
+                    ),
+                ]);
+
+                const withdrawAmounts = mapAmountsByTokenContract(
+                    withdrawTokens,
+                    withdrawEstimates,
                 );
+                const feeAmounts = mapAmountsByTokenContract(feeTokens, feeEstimates);
+
+                const tokenEstimates = pool.tokens.map(token =>
+                    BigNumber.maximum(
+                        new BigNumber(withdrawAmounts.get(token.contract) || '0').minus(
+                            feeAmounts.get(token.contract) || '0',
+                        ),
+                        0,
+                    ).toFixed(),
+                );
+
                 const liquidityUsd = tokenEstimates.reduce((acc, amount, index) => {
                     const tokenPriceXlm = new BigNumber(
                         tokenPrices.get(pool.tokens[index].contract) || '0',

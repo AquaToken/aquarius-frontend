@@ -282,22 +282,41 @@ export const getAmmAquaBalance = async (accountId: string): Promise<number> => {
                 const positionAmounts = await Promise.all(
                     positions.map(async position => {
                         try {
-                            const orderedTokens = [...item.tokens];
-                            const estimates = await SorobanService.amm.estimateWithdrawPosition(
-                                accountId,
-                                item.address,
-                                orderedTokens,
-                                position.tickLower,
-                                position.tickUpper,
-                                String(position.liquidity || '0'),
-                            );
-                            const aquaIndex = orderedTokens.findIndex(
+                            const withdrawTokens = [...item.tokens];
+                            const feeTokens = [...item.tokens];
+                            const [withdrawEstimates, feeEstimates] = await Promise.all([
+                                SorobanService.amm.estimateWithdrawPosition(
+                                    accountId,
+                                    item.address,
+                                    withdrawTokens,
+                                    position.tickLower,
+                                    position.tickUpper,
+                                    String(position.liquidity || '0'),
+                                ),
+                                SorobanService.amm.getPositionFees(
+                                    item.address,
+                                    accountId,
+                                    feeTokens,
+                                    position.tickLower,
+                                    position.tickUpper,
+                                ),
+                            ]);
+                            const withdrawAquaIndex = withdrawTokens.findIndex(
                                 token => token.contract === aquaContract,
                             );
-
-                            return new BigNumber(
-                                aquaIndex >= 0 ? estimates[aquaIndex] || '0' : '0',
+                            const feeAquaIndex = feeTokens.findIndex(
+                                token => token.contract === aquaContract,
                             );
+                            const withdrawAmount = new BigNumber(
+                                withdrawAquaIndex >= 0
+                                    ? withdrawEstimates[withdrawAquaIndex] || '0'
+                                    : '0',
+                            );
+                            const feeAmount = new BigNumber(
+                                feeAquaIndex >= 0 ? feeEstimates[feeAquaIndex] || '0' : '0',
+                            );
+
+                            return BigNumber.maximum(withdrawAmount.minus(feeAmount), 0);
                         } catch {
                             return new BigNumber(0);
                         }
