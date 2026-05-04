@@ -2,15 +2,23 @@ import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 
 import {
+    getRegistryMyVotesRequest,
     getRegistryAssetMarketStatsRequest,
     getRegistryAssetsRequest,
+    getRegistryVoteHistoryRequest,
     getUpcomingRegistryVotesRequest,
 } from 'api/asset-registry';
 
 import { getEnvClassicAssetData } from 'helpers/assets';
 import { convertLocalDateToUTCIgnoringTimezone, getDateString } from 'helpers/date';
 
+import useAuthStore from 'store/authStore/useAuthStore';
+
+import { ModalService } from 'services/globalServices';
+
 import { Option } from 'types/option';
+
+import ChooseLoginMethodModal from 'web/modals/auth/ChooseLoginMethodModal';
 
 import Search from 'assets/icons/actions/icon-search-16.svg';
 
@@ -31,6 +39,7 @@ import {
     RegistryAsset,
     RegistryAssetMarketStatsMap,
     RegistryAssetProposalType,
+    RegistryProposalPreview,
     UpcomingVoteData,
 } from './AssetRegistryMainPage.types';
 import AssetRegistryContent from './components/AssetRegistryContent/AssetRegistryContent';
@@ -39,6 +48,8 @@ const FILTER_OPTIONS: Option<AssetRegistryFilter>[] = [
     { label: 'All', value: AssetRegistryFilter.all },
     { label: 'Whitelisted', value: AssetRegistryFilter.whitelisted },
     { label: 'Revoked', value: AssetRegistryFilter.revoked },
+    { label: 'My Votes', value: AssetRegistryFilter.myVotes },
+    { label: 'History', value: AssetRegistryFilter.history },
 ];
 
 const aqua = getEnvClassicAssetData('aqua');
@@ -121,8 +132,7 @@ const MOCK_UPCOMING_VOTES: UpcomingVoteData[] = MOCK_UPCOMING_VOTES_ASSETS.map(
         );
 
         return {
-            startsAt: `Starts ${getDateString(startAt.getTime(), {
-            })}`,
+            startsAt: `Starts ${getDateString(startAt.getTime(), {})}`,
             assetCode,
             assetIssuer,
             type: 'ADD_ASSET',
@@ -135,8 +145,13 @@ const AssetRegistryMainPage = () => {
     const [search, setSearch] = useState('');
     const [apiRegistryAssets, setApiRegistryAssets] = useState<RegistryAsset[]>([]);
     const [apiUpcomingVotes, setApiUpcomingVotes] = useState<UpcomingVoteData[]>([]);
+    const [myVoteProposals, setMyVoteProposals] = useState<RegistryProposalPreview[]>([]);
+    const [historyVoteProposals, setHistoryVoteProposals] = useState<RegistryProposalPreview[]>([]);
+    const [isMyVotesLoading, setIsMyVotesLoading] = useState(false);
+    const [isHistoryLoading, setIsHistoryLoading] = useState(false);
     const [marketStats, setMarketStats] = useState<RegistryAssetMarketStatsMap>({});
     const [isMarketStatsLoading, setIsMarketStatsLoading] = useState(true);
+    const { account, isLogged } = useAuthStore();
 
     useEffect(() => {
         let isCancelled = false;
@@ -153,6 +168,78 @@ const AssetRegistryMainPage = () => {
             isCancelled = true;
         };
     }, []);
+
+    useEffect(() => {
+        if (filter !== AssetRegistryFilter.myVotes) {
+            return;
+        }
+
+        if (!isLogged || !account) {
+            setMyVoteProposals([]);
+            return;
+        }
+
+        let isCancelled = false;
+
+        setIsMyVotesLoading(true);
+
+        getRegistryMyVotesRequest(account.accountId())
+            .then(data => {
+                if (!isCancelled) {
+                    setMyVoteProposals(data);
+                }
+            })
+            .catch(() => {
+                if (!isCancelled) {
+                    setMyVoteProposals([]);
+                }
+            })
+            .finally(() => {
+                if (!isCancelled) {
+                    setIsMyVotesLoading(false);
+                }
+            });
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [account, filter, isLogged]);
+
+    useEffect(() => {
+        if (filter !== AssetRegistryFilter.history) {
+            return;
+        }
+
+        if (!isLogged || !account) {
+            setHistoryVoteProposals([]);
+            return;
+        }
+
+        let isCancelled = false;
+
+        setIsHistoryLoading(true);
+
+        getRegistryVoteHistoryRequest(account.accountId())
+            .then(data => {
+                if (!isCancelled) {
+                    setHistoryVoteProposals(data);
+                }
+            })
+            .catch(() => {
+                if (!isCancelled) {
+                    setHistoryVoteProposals([]);
+                }
+            })
+            .finally(() => {
+                if (!isCancelled) {
+                    setIsHistoryLoading(false);
+                }
+            });
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [account, filter, isLogged]);
 
     useEffect(() => {
         let isCancelled = false;
@@ -182,8 +269,7 @@ const AssetRegistryMainPage = () => {
 
                         return {
                             id: String(proposal.id),
-                            startsAt: `Starts ${getDateString(startAt.getTime(), {
-                            })}`,
+                            startsAt: `Starts ${getDateString(startAt.getTime(), {})}`,
                             assetCode: proposal.asset_code as string,
                             assetIssuer: proposal.asset_issuer ?? '',
                             type: proposal.proposal_type as RegistryAssetProposalType,
@@ -266,6 +352,25 @@ const AssetRegistryMainPage = () => {
         });
     }, [items, filter, search]);
 
+    const onFilterChange = (value: AssetRegistryFilter) => {
+        if (
+            (value === AssetRegistryFilter.myVotes || value === AssetRegistryFilter.history) &&
+            !isLogged
+        ) {
+            ModalService.openModal(ChooseLoginMethodModal);
+            return;
+        }
+
+        setFilter(value);
+    };
+
+    const isVotesMode =
+        filter === AssetRegistryFilter.myVotes || filter === AssetRegistryFilter.history;
+    const voteProposals =
+        filter === AssetRegistryFilter.myVotes ? myVoteProposals : historyVoteProposals;
+    const isVotesLoading =
+        filter === AssetRegistryFilter.myVotes ? isMyVotesLoading : isHistoryLoading;
+
     return (
         <PageContainer $color={COLORS.gray50}>
             <MainSection>
@@ -273,6 +378,9 @@ const AssetRegistryMainPage = () => {
 
                 <AssetRegistryContent
                     items={filteredItems}
+                    voteProposals={voteProposals}
+                    isVotesMode={isVotesMode}
+                    isVotesLoading={isVotesLoading}
                     marketStats={marketStats}
                     isMarketStatsLoading={isMarketStatsLoading}
                     upcomingVotes={upcomingVotes}
@@ -281,17 +389,19 @@ const AssetRegistryMainPage = () => {
                             <FilterGroup
                                 value={filter}
                                 options={FILTER_OPTIONS}
-                                onChange={setFilter}
+                                onChange={onFilterChange}
                             />
-                            <SearchInputWrap>
-                                <Input
-                                    inputSize="medium"
-                                    placeholder="Search by token name or address"
-                                    value={search}
-                                    onChange={({ target }) => setSearch(target.value)}
-                                    postfix={<Search />}
-                                />
-                            </SearchInputWrap>
+                            {!isVotesMode ? (
+                                <SearchInputWrap>
+                                    <Input
+                                        inputSize="medium"
+                                        placeholder="Search by token name or address"
+                                        value={search}
+                                        onChange={({ target }) => setSearch(target.value)}
+                                        postfix={<Search />}
+                                    />
+                                </SearchInputWrap>
+                            ) : null}
                         </Toolbar>
                     }
                 />
