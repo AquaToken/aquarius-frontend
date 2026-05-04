@@ -16,6 +16,8 @@ import {
     RegistryProposalPreview,
 } from 'web/pages/asset-registry/pages/AssetRegistryMainPage/AssetRegistryMainPage.types';
 
+const USE_MOCK_REGISTRY_PROPOSALS = true;
+
 export const getRegistryAssetsRequest = (): Promise<RegistryAssetsResponse> =>
     axios
         .get<RegistryAssetsResponse>(`${getGovernanceUrl()}/asset-tokens/`)
@@ -35,17 +37,19 @@ export const getActiveRegistryVotingRequest = (): Promise<Proposal | null> =>
         .then(({ data }) => data.results[0] ?? null);
 
 export const getUpcomingRegistryVotesRequest = (): Promise<Proposal[]> =>
-    axios
-        .get<GovernanceListResponse<Proposal>>(`${getGovernanceUrl()}/proposal/`, {
-            params: {
-                proposal_type: 'asset',
-                status: 'discussion',
-                limit: 100,
-                page: 1,
-                ordering: 'start_at',
-            },
-        })
-        .then(({ data }) => data.results);
+    USE_MOCK_REGISTRY_PROPOSALS
+        ? Promise.resolve([])
+        : axios
+              .get<GovernanceListResponse<Proposal>>(`${getGovernanceUrl()}/proposal/`, {
+                  params: {
+                      proposal_type: 'asset',
+                      status: 'discussion',
+                      limit: 100,
+                      page: 1,
+                      ordering: 'start_at',
+                  },
+              })
+              .then(({ data }) => data.results);
 
 export const getRegistryMyVotesRequest = (pubkey: string): Promise<RegistryProposalPreview[]> => {
     const params = new URLSearchParams();
