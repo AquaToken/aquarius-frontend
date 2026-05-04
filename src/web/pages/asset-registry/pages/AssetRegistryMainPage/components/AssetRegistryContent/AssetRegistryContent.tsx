@@ -5,13 +5,18 @@ import { Layout, LeftColumn } from './AssetRegistryContent.styled';
 import {
     RegistryAsset,
     RegistryAssetMarketStatsMap,
+    RegistryProposalPreview,
     UpcomingVoteData,
 } from '../../AssetRegistryMainPage.types';
 import AssetRegistryList from '../AssetRegistryList/AssetRegistryList';
+import AssetRegistryMyVotesList from '../AssetRegistryMyVotesList/AssetRegistryMyVotesList';
 import AssetRegistrySidebar from '../AssetRegistrySidebar/AssetRegistrySidebar';
 
 type AssetRegistryContentProps = {
     items: RegistryAsset[];
+    voteProposals: RegistryProposalPreview[];
+    isVotesMode: boolean;
+    isVotesLoading: boolean;
     marketStats: RegistryAssetMarketStatsMap;
     isMarketStatsLoading: boolean;
     upcomingVotes: UpcomingVoteData[];
@@ -20,6 +25,9 @@ type AssetRegistryContentProps = {
 
 const AssetRegistryContent = ({
     items,
+    voteProposals,
+    isVotesMode,
+    isVotesLoading,
     marketStats,
     isMarketStatsLoading,
     upcomingVotes,
@@ -28,11 +36,15 @@ const AssetRegistryContent = ({
     <Layout>
         <LeftColumn>
             {toolbar}
-            <AssetRegistryList
-                items={items}
-                marketStats={marketStats}
-                isMarketStatsLoading={isMarketStatsLoading}
-            />
+            {isVotesMode ? (
+                <AssetRegistryMyVotesList proposals={voteProposals} isLoading={isVotesLoading} />
+            ) : (
+                <AssetRegistryList
+                    items={items}
+                    marketStats={marketStats}
+                    isMarketStatsLoading={isMarketStatsLoading}
+                />
+            )}
         </LeftColumn>
         <AssetRegistrySidebar
             marketStats={marketStats}

@@ -13,6 +13,7 @@ import { Proposal } from 'types/governance';
 import {
     RegistryAssetMarketStatsMap,
     RegistryAssetsResponse,
+    RegistryProposalPreview,
 } from 'web/pages/asset-registry/pages/AssetRegistryMainPage/AssetRegistryMainPage.types';
 
 export const getRegistryAssetsRequest = (): Promise<RegistryAssetsResponse> =>
@@ -45,6 +46,41 @@ export const getUpcomingRegistryVotesRequest = (): Promise<Proposal[]> =>
             },
         })
         .then(({ data }) => data.results);
+
+export const getRegistryMyVotesRequest = (pubkey: string): Promise<RegistryProposalPreview[]> => {
+    const params = new URLSearchParams();
+
+    params.append('limit', '100');
+    params.append('page', '1');
+    params.append('ordering', '-created_at');
+    params.append('proposal_type', 'asset');
+    params.append('vote_owner_public_key', pubkey);
+    params.append('active', 'true');
+
+    return axios
+        .get<GovernanceListResponse<RegistryProposalPreview>>(`${getGovernanceUrl()}/proposal/`, {
+            params,
+        })
+        .then(({ data }) => data.results);
+};
+
+export const getRegistryVoteHistoryRequest = (
+    pubkey: string,
+): Promise<RegistryProposalPreview[]> => {
+    const params = new URLSearchParams();
+
+    params.append('limit', '100');
+    params.append('page', '1');
+    params.append('ordering', '-created_at');
+    params.append('proposal_type', 'asset');
+    params.append('vote_owner_public_key', pubkey);
+
+    return axios
+        .get<GovernanceListResponse<RegistryProposalPreview>>(`${getGovernanceUrl()}/proposal/`, {
+            params,
+        })
+        .then(({ data }) => data.results);
+};
 
 const AMM_PAGE_SIZE = 500;
 const STELLAR_DECIMALS = 1e7;

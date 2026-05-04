@@ -1,9 +1,13 @@
 import { PROPOSAL_STATUS } from 'constants/dao';
 
+import { ProposalSimple } from 'types/governance';
+
 export enum AssetRegistryFilter {
     all = 'all',
     whitelisted = 'whitelisted',
     revoked = 'revoked',
+    myVotes = 'myVotes',
+    history = 'history',
 }
 
 export type RegistryAssetProposalType = 'ADD_ASSET' | 'REMOVE_ASSET';
@@ -47,6 +51,13 @@ export type RegistryAsset = {
     asset_contract_address: string | null;
     whitelisted: boolean;
     proposals: RegistryAssetProposal[];
+};
+
+export type RegistryProposalPreview = ProposalSimple & {
+    proposal_type: RegistryAssetProposalType;
+    asset_code: string | null;
+    asset_issuer: string | null;
+    asset_contract_address: string | null;
 };
 
 export type RegistryAssetsResponse = {
