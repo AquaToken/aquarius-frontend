@@ -12,7 +12,6 @@ const AppGlobalStyle = createGlobalStyle`
     font-size: 62.5%; // 1rem = 10px
     animation-timing-function: linear;
     width: 100vw !important;
-    overflow-x: hidden;
   }
 
   body {
