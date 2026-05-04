@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ReactElement, useEffect, useState } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getProposalRequest } from 'api/governance';
@@ -32,9 +32,19 @@ const GovernanceVoteProposalPage = (): ReactElement => {
     const [updateIndex, setUpdateIndex] = useState(0);
     const [error, setError] = useState(false);
 
+    const navigate = useNavigate();
+
     useEffect(() => {
         getProposalRequest(id)
             .then(response => {
+                if (response.proposal_type !== 'GENERAL') {
+                    navigate(
+                        AppRoutes.section.assetRegistry.to.voting({
+                            id: response.id.toString(),
+                        }),
+                    );
+                    return;
+                }
                 setProposal(response);
             })
             .catch(() => {
