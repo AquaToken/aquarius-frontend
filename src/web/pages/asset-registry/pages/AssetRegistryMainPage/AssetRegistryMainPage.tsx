@@ -84,10 +84,6 @@ const getRegistryAssetId = (asset: RegistryAsset) =>
 
 const MOCK_UPCOMING_VOTES_ASSETS: Array<Pick<UpcomingVoteData, 'assetCode' | 'assetIssuer'>> = [
     {
-        assetCode: 'sUSD',
-        assetIssuer: 'GCHW7CWI7GMIYQYFXMFJNJX5645XGWIINIAEQK3SABQO6CAYL5T7JYIH',
-    },
-    {
         assetCode: 'PYUSD',
         assetIssuer: 'GDQE7IXJ4HUHV6RQHIUPRJSEZE4DRS5WY577O2FY6YQ5LVWZ7JZTU2V5',
     },
@@ -128,7 +124,7 @@ const MOCK_UPCOMING_VOTES_ASSETS: Array<Pick<UpcomingVoteData, 'assetCode' | 'as
 const MOCK_UPCOMING_VOTES: UpcomingVoteData[] = MOCK_UPCOMING_VOTES_ASSETS.map(
     ({ assetCode, assetIssuer }, index) => {
         const startAt = convertLocalDateToUTCIgnoringTimezone(
-            new Date(Date.UTC(2026, 4, 4 + index * 7, 0, 0, 0)),
+            new Date(Date.UTC(2026, 4, 11 + index * 7, 0, 0, 0)),
         );
 
         return {

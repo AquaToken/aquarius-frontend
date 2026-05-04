@@ -24,19 +24,17 @@ export const getRegistryAssetsRequest = (): Promise<RegistryAssetsResponse> =>
         .then(({ data }) => data);
 
 export const getActiveRegistryVotingRequest = (): Promise<Proposal | null> =>
-    USE_MOCK_REGISTRY_PROPOSALS
-        ? Promise.resolve(null)
-        : axios
-              .get<GovernanceListResponse<Proposal>>(`${getGovernanceUrl()}/proposal/`, {
-                  params: {
-                      proposal_type: 'asset',
-                      status: 'voting',
-                      limit: 1,
-                      page: 1,
-                      ordering: '-created_at',
-                  },
-              })
-              .then(({ data }) => data.results[0] ?? null);
+    axios
+        .get<GovernanceListResponse<Proposal>>(`${getGovernanceUrl()}/proposal/`, {
+            params: {
+                proposal_type: 'asset',
+                status: 'voting',
+                limit: 1,
+                page: 1,
+                ordering: '-created_at',
+            },
+        })
+        .then(({ data }) => data.results[0] ?? null);
 
 export const getUpcomingRegistryVotesRequest = (): Promise<Proposal[]> =>
     USE_MOCK_REGISTRY_PROPOSALS
