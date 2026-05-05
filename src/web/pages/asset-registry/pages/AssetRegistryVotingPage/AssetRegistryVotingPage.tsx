@@ -52,13 +52,13 @@ import AssetRegistryStatusBadge from '../AssetRegistryMainPage/components/AssetR
 
 const assetProposalFields: Array<{ key: keyof Proposal; label: string }> = [
     // { key: 'asset_aquarius_traction', label: 'Aquarius traction' },
-    { key: 'asset_audit_info', label: 'Audit info' },
-    { key: 'asset_community_references', label: 'Community references' },
+    { key: 'asset_audit_info', label: 'Audit Info' },
+    { key: 'asset_community_references', label: 'Community References' },
     // { key: 'asset_holder_distribution', label: 'Holder distribution' },
     // { key: 'asset_issuer_commitments', label: 'Issuer commitments' },
     // { key: 'asset_issuer_information', label: 'Issuer information' },
     // { key: 'asset_liquidity', label: 'Liquidity' },
-    { key: 'asset_related_projects', label: 'Related projects' },
+    { key: 'asset_related_projects', label: 'Related Projects' },
     // { key: 'asset_stellar_flags', label: 'Stellar flags' },
     // { key: 'asset_token_description', label: 'Token description' },
     // { key: 'asset_trading_volume', label: 'Trading volume' },
