@@ -1,19 +1,14 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 import IconCheck16 from 'assets/icons/small-icons/check/icon-check-16.svg';
 import HeroBackground from 'assets/main-page/hero-background.png';
 
-import {
-    containerScrollAnimation,
-    fadeAppearAnimation,
-    slideUpSoftAnimation,
-} from 'styles/animations';
 import { fullWidthSectionStyles, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS, MAX_WIDTHS, PAGE_PADDINGS } from 'styles/style-constants';
 
 export type TabKey = 'stable' | 'volatile' | 'concentrated';
 
-export const Wrapper = styled.section<{ $visible: boolean }>`
+export const Wrapper = styled.section`
     ${fullWidthSectionStyles};
     max-width: ${MAX_WIDTHS.common};
     position: relative;
@@ -25,7 +20,6 @@ export const Wrapper = styled.section<{ $visible: boolean }>`
     display: flex;
     flex-direction: column;
     margin-top: 11rem;
-    ${containerScrollAnimation};
 
     svg {
         z-index: 0;
@@ -48,20 +42,11 @@ export const Wrapper = styled.section<{ $visible: boolean }>`
   `}
 `;
 
-export const TitleBlocks = styled.div<{ $visible: boolean }>`
+export const TitleBlocks = styled.div`
     display: flex;
     align-items: center;
     gap: 6rem;
     width: 100%;
-    opacity: 0;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: 0.1s;
-        `}
-
     ${respondDown(Breakpoints.md)`flex-direction: column; gap: 2rem;`};
 `;
 
@@ -105,19 +90,10 @@ export const IconCheck = styled(IconCheck16)`
     color: ${COLORS.white};
 `;
 
-export const TabsBlock = styled.div<{ $visible: boolean }>`
+export const TabsBlock = styled.div`
     display: flex;
     flex-direction: column;
     margin-top: 9rem;
-    opacity: 0;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${fadeAppearAnimation};
-            animation-delay: 0.3s;
-        `}
-
     ${respondDown(Breakpoints.md)`margin-top: 7rem;`};
     ${respondDown(Breakpoints.sm)`margin-top: 6rem;`};
     ${respondDown(Breakpoints.xs)`margin-top: 4rem;`};

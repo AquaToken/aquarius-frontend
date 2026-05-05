@@ -1,13 +1,11 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 import { AppRoutes } from 'constants/routes';
 
 import { getAssetString, getEnvClassicAssetData } from 'helpers/assets';
 import { createLumen } from 'helpers/token';
-
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
 
 import useAuthStore from 'store/authStore/useAuthStore';
 
@@ -85,24 +83,11 @@ const Background = styled.img`
     `}
 `;
 
-const fadeUp = css`
-    opacity: 0;
-    transform: translateY(30px);
-    transition:
-        opacity 0.6s ease,
-        transform 0.6s ease;
-    &.visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
-`;
-
 const Title = styled.div`
     display: flex;
     align-items: center;
     font-weight: 700;
     font-size: 10rem;
-    ${fadeUp};
 
     ${respondDown(Breakpoints.lg)`
         font-size: 7rem;
@@ -117,7 +102,6 @@ const Description = styled.p`
     font-size: 3.6rem;
     line-height: 4.2rem;
     margin: 2.4rem 0;
-    ${fadeUp};
 
     ${respondDown(Breakpoints.lg)`
         font-size: 3rem;
@@ -135,7 +119,6 @@ const SecondaryDescription = styled.p`
     font-size: 1.6rem;
     line-height: 180%;
     color: ${COLORS.textGray};
-    ${fadeUp};
 
     ${respondDown(Breakpoints.sm)`
         font-size: 1.4rem;
@@ -190,7 +173,6 @@ const AquaPriceStyled = styled(AquaPrice)`
 
 const MainBlock = () => {
     const { isLogged } = useAuthStore();
-    const { ref, visible } = useScrollAnimation(0.3, true);
 
     const buyAqua = e => {
         if (!isLogged) {
@@ -204,16 +186,14 @@ const MainBlock = () => {
     return (
         <Container>
             <SocialLinks />
-            <Content ref={ref as React.RefObject<HTMLDivElement>}>
+            <Content>
                 <Background src={Bg} />
-                <Title className={visible ? 'visible' : ''}>
+                <Title>
                     AQUA
                     <AnimatedBorderedText text="Token" />
                 </Title>
-                <Description className={visible ? 'visible' : ''}>
-                    Powers the #1 Stellar DeFi protocol
-                </Description>
-                <SecondaryDescription className={visible ? 'visible' : ''}>
+                <Description>Powers the #1 Stellar DeFi protocol</Description>
+                <SecondaryDescription>
                     Earn AQUA rewards by providing liquidity and voting in the Aquarius ecosystem.
                 </SecondaryDescription>
                 <ButtonAndPriceBlock>

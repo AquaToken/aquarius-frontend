@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 import { AppRoutes } from 'constants/routes';
-
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
 
 import IconIce from 'assets/icons/small-icons/icon-ice-symbol-10.svg?url';
 import BG from 'assets/token-page/ice-pattern.svg?url';
@@ -13,7 +11,6 @@ import IceLogoIcon from 'assets/tokens/ice-logo.svg';
 import { Button } from 'basics/buttons';
 import { ExternalLink } from 'basics/links';
 
-import { containerScrollAnimation, slideUpSoftAnimation } from 'styles/animations';
 import { cardBoxShadow, commonMaxWidth, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS } from 'styles/style-constants';
 
@@ -21,12 +18,11 @@ import { Breakpoints, COLORS } from 'styles/style-constants';
 /*                                   Styles                                   */
 /* -------------------------------------------------------------------------- */
 
-const Container = styled.section<{ $visible: boolean }>`
+const Container = styled.section`
     padding: 0 10rem;
     ${commonMaxWidth};
     margin-top: 8rem;
     width: 100%;
-    ${containerScrollAnimation};
 
     ${respondDown(Breakpoints.sm)`
         padding: 0;
@@ -34,16 +30,10 @@ const Container = styled.section<{ $visible: boolean }>`
     `}
 `;
 
-const Content = styled.div<{ $visible: boolean }>`
+const Content = styled.div`
     display: flex;
     gap: 3.2rem;
     padding-bottom: 10rem;
-    opacity: 0;
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-        `}
 
     ${respondDown(Breakpoints.md)`
         flex-direction: column;
@@ -64,7 +54,7 @@ const TextBlock = styled.div`
     `}
 `;
 
-const BlueBlock = styled.div<{ $visible: boolean }>`
+const BlueBlock = styled.div`
     flex: 1;
     background-repeat: repeat;
     background-size: auto;
@@ -72,13 +62,6 @@ const BlueBlock = styled.div<{ $visible: boolean }>`
     background-image: url(${BG});
     border-radius: 10rem;
     height: 34rem;
-    opacity: 0;
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: 0.15s;
-        `}
 
     ${respondDown(Breakpoints.sm)`
         border-radius: 0;
@@ -118,18 +101,11 @@ const LockerBlock = styled.div`
     `}
 `;
 
-const Title = styled.h1<{ $visible: boolean }>`
+const Title = styled.h1`
     font-weight: 700;
     font-size: 8rem;
     line-height: 8rem;
     color: ${COLORS.textPrimary};
-    opacity: 0;
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: 0.05s;
-        `}
 
     span {
         display: none;
@@ -151,36 +127,22 @@ const Title = styled.h1<{ $visible: boolean }>`
     `}
 `;
 
-const SubTitle = styled.h2<{ $visible: boolean }>`
+const SubTitle = styled.h2`
     margin: 3.2rem 0;
     font-weight: 400;
     font-size: 3.6rem;
     line-height: 4.2rem;
     color: ${COLORS.textPrimary};
-    opacity: 0;
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: 0.1s;
-        `}
 
     ${respondDown(Breakpoints.md)`
         display: none;
     `}
 `;
 
-const List = styled.ul<{ $visible: boolean }>`
+const List = styled.ul`
     margin: 0 0 3.2rem;
     padding: 0;
     list-style: none;
-    opacity: 0;
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: 0.15s;
-        `}
 `;
 
 const Item = styled.li`
@@ -227,18 +189,16 @@ const ButtonStyled = styled(Button)`
 /* -------------------------------------------------------------------------- */
 
 const AboutIce = () => {
-    const { ref, visible } = useScrollAnimation(0.25, true);
-
     return (
-        <Container ref={ref as React.RefObject<HTMLDivElement>} $visible={visible}>
-            <Content $visible={visible}>
+        <Container>
+            <Content>
                 <TextBlock>
-                    <Title $visible={visible}>
+                    <Title>
                         Freeze your AQUA into ICE <span>and unlock extra benefits</span>
                     </Title>
-                    <SubTitle $visible={visible}>and unlock extra benefits</SubTitle>
+                    <SubTitle>and unlock extra benefits</SubTitle>
 
-                    <List $visible={visible}>
+                    <List>
                         <Item>Vote for markets so they generate more rewards</Item>
                         <Item>Earn more from liquidity with ICE boosts</Item>
                         <Item>Delegate ICE and earn passive rewards</Item>
@@ -249,7 +209,7 @@ const AboutIce = () => {
                     </ExternalLink>
                 </TextBlock>
 
-                <BlueBlock $visible={visible}>
+                <BlueBlock>
                     <LockerBlock>
                         <IceLogo />
                         <h3>Turn AQUA into ICE with just a few clicks</h3>

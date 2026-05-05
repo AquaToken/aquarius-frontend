@@ -12,7 +12,6 @@ import HeroTopLeft from 'assets/main-page/hero-top-left.svg';
 
 import Button from 'basics/buttons/Button';
 
-import { fadeAppearAnimation, pulseAnimation } from 'styles/animations';
 import { fullWidthSectionStyles, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS, HEADER_HEIGHT, PAGE_PADDINGS } from 'styles/style-constants';
 
@@ -31,7 +30,6 @@ export const Hero = styled.section<{ $isDarkTheme: boolean }>`
     align-items: center;
     justify-content: center;
     height: calc(100vh - ${HEADER_HEIGHT});
-    ${fadeAppearAnimation};
 
     svg {
         z-index: 0;
@@ -61,8 +59,6 @@ export const MainContent = styled.div`
     align-items: center;
     justify-content: center;
     text-align: center;
-    ${fadeAppearAnimation};
-    animation-delay: 0.1s;
 `;
 
 export const FooterContent = styled.div`
@@ -72,8 +68,6 @@ export const FooterContent = styled.div`
     flex: 1;
     align-items: center;
     justify-content: end;
-    ${fadeAppearAnimation};
-    animation-delay: 0.4s;
 `;
 
 export const Title = styled.h1<{ $isDarkTheme: boolean }>`
@@ -82,8 +76,6 @@ export const Title = styled.h1<{ $isDarkTheme: boolean }>`
     line-height: 100%;
     margin-top: 1.6rem;
     color: ${({ $isDarkTheme }) => ($isDarkTheme ? COLORS.white : COLORS.textPrimary)};
-    ${fadeAppearAnimation};
-    animation-delay: 0.2s;
 
     ${respondDown(Breakpoints.md)`
     font-size: 5.6rem;
@@ -101,8 +93,6 @@ export const Description = styled.p<{ $isDarkTheme: boolean }>`
     color: ${({ $isDarkTheme }) => ($isDarkTheme ? COLORS.white : COLORS.textSecondary)};
     opacity: ${({ $isDarkTheme }) => ($isDarkTheme ? 0.8 : 1)};
     margin-top: 1.2rem;
-    ${fadeAppearAnimation};
-    animation-delay: 0.35s;
 
     ${respondDown(Breakpoints.sm)`
     font-size: 1.4rem;
@@ -114,8 +104,6 @@ export const ProvideLiqButton = styled(Button)`
     border-radius: 4.6rem;
     padding: 0 4rem;
     margin-top: 2.4rem;
-    ${fadeAppearAnimation};
-    animation-delay: 0.5s;
 
     ${respondDown(Breakpoints.sm)`
     padding: 0 3rem;
@@ -173,14 +161,11 @@ export const Label = styled.div<{ $isDarkTheme: boolean }>`
     font-weight: 500;
     font-size: 1.8rem;
     line-height: 180%;
-    ${fadeAppearAnimation};
-    animation-delay: 0.1s;
 `;
 
 export const AquaLogoStyled = styled(AquaLogo)<{ $isDarkTheme: boolean }>`
     color: ${({ $isDarkTheme }) => ($isDarkTheme ? COLORS.white : COLORS.black)};
     height: 4rem;
-    ${pulseAnimation};
 `;
 
 /* ----------------------------- Decorations -------------------------------- */
@@ -189,8 +174,6 @@ export const HandTopRightStyled = styled(HandTopRight)`
     position: absolute;
     top: 0;
     right: 0;
-    ${fadeAppearAnimation};
-    animation-delay: 0.1s;
 
     ${respondDown(Breakpoints.sm)`
     display: none;
@@ -201,8 +184,6 @@ export const HandTopRightLightStyled = styled(HandTopRightLight)`
     position: absolute;
     top: 0;
     right: 0;
-    ${fadeAppearAnimation};
-    animation-delay: 0.1s;
 
     ${respondDown(Breakpoints.sm)`
     display: none;
@@ -213,8 +194,6 @@ export const HandBottomLeftStyled = styled(HandLeftBottom)`
     position: absolute;
     bottom: 0;
     left: 0;
-    ${fadeAppearAnimation};
-    animation-delay: 0.15s;
 
     ${respondDown(Breakpoints.sm)`
     display: none;
@@ -225,8 +204,6 @@ export const HandBottomLeftLightStyled = styled(HandLeftBottomLight)`
     position: absolute;
     bottom: 0;
     left: 0;
-    ${fadeAppearAnimation};
-    animation-delay: 0.15s;
 
     ${respondDown(Breakpoints.sm)`
     display: none;
@@ -237,16 +214,12 @@ export const HeroTopLeftStyled = styled(HeroTopLeft)`
     position: absolute;
     top: 0;
     left: 0;
-    ${fadeAppearAnimation};
-    animation-delay: 0.2s;
 `;
 
 export const HeroBottomRightStyled = styled(HeroBottomRight)`
     position: absolute;
     bottom: 0;
     right: 0;
-    ${fadeAppearAnimation};
-    animation-delay: 0.25s;
 `;
 
 export const ArrowAlt16Styled = styled(ArrowAlt16)`

@@ -27,12 +27,17 @@ import { Breakpoints, COLORS } from 'styles/style-constants';
 /*                                   Styled                                   */
 /* -------------------------------------------------------------------------- */
 
-const Wrapper = styled.section<{ $visible: boolean }>`
+type AnimationProps = {
+    $animated: boolean;
+    $visible: boolean;
+};
+
+const Wrapper = styled.section<AnimationProps>`
     display: flex;
     flex-direction: column;
     width: 100%;
     margin-top: 11rem;
-    ${containerScrollAnimation};
+    ${({ $animated }) => $animated && containerScrollAnimation};
 
     ${respondDown(Breakpoints.md)`
         margin-top: 10rem;
@@ -47,14 +52,15 @@ const Wrapper = styled.section<{ $visible: boolean }>`
     `}
 `;
 
-const Title = styled.div<{ $visible: boolean }>`
+const Title = styled.div<AnimationProps>`
     font-size: 3.5rem;
     line-height: 100%;
     color: ${COLORS.textPrimary};
     margin-bottom: 2.4rem;
-    opacity: 0;
+    opacity: ${({ $animated }) => ($animated ? 0 : 1)};
 
-    ${({ $visible }) =>
+    ${({ $animated, $visible }) =>
+        $animated &&
         $visible &&
         css`
             ${slideUpSoftAnimation};
@@ -71,15 +77,16 @@ const Title = styled.div<{ $visible: boolean }>`
     `}
 `;
 
-const Description = styled.div<{ $visible: boolean }>`
+const Description = styled.div<AnimationProps>`
     font-size: 1.6rem;
     line-height: 180%;
     color: ${COLORS.textSecondary};
-    opacity: 0;
+    opacity: ${({ $animated }) => ($animated ? 0 : 1)};
     margin-bottom: 5.6rem;
     font-weight: 500;
 
-    ${({ $visible }) =>
+    ${({ $animated, $visible }) =>
+        $animated &&
         $visible &&
         css`
             ${fadeAppearAnimation};
@@ -96,15 +103,16 @@ const Description = styled.div<{ $visible: boolean }>`
     `}
 `;
 
-const LinksWrapper = styled.div<{ $visible: boolean }>`
+const LinksWrapper = styled.div<AnimationProps>`
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 3.2rem;
     width: 100%;
-    opacity: 0;
+    opacity: ${({ $animated }) => ($animated ? 0 : 1)};
 
-    ${({ $visible }) =>
+    ${({ $animated, $visible }) =>
+        $animated &&
         $visible &&
         css`
             ${slideUpSoftAnimation};
@@ -190,17 +198,29 @@ const ItemTitle = styled.span`
 /*                                 Component                                  */
 /* -------------------------------------------------------------------------- */
 
-const Community: React.FC = () => {
+interface Props {
+    disableAnimation?: boolean;
+}
+
+const Community: React.FC<Props> = ({ disableAnimation = false }) => {
     const { ref, visible } = useScrollAnimation(0.25, true);
+    const animated = !disableAnimation;
 
     return (
-        <Wrapper ref={ref as React.RefObject<HTMLDivElement>} $visible={visible} id="community">
-            <Title $visible={visible}>Join the conversation</Title>
-            <Description $visible={visible}>
+        <Wrapper
+            ref={ref as React.RefObject<HTMLDivElement>}
+            $animated={animated}
+            $visible={visible}
+            id="community"
+        >
+            <Title $animated={animated} $visible={visible}>
+                Join the conversation
+            </Title>
+            <Description $animated={animated} $visible={visible}>
                 Learn more about Aquarius, follow the project updates, chat with the team and other
                 community members.
             </Description>
-            <LinksWrapper $visible={visible}>
+            <LinksWrapper $animated={animated} $visible={visible}>
                 <Link href="https://t.me/aquarius_official_community">
                     <Telegram />
                     <ItemTitle>Telegram chat</ItemTitle>

@@ -23,7 +23,7 @@ const LockerAbout = (): React.ReactNode => (
         <MainSection>
             <WhyFreezeAQUA />
         </MainSection>
-        <FAQ questions={LockerQuestions} />
+        <FAQ questions={LockerQuestions} disableAnimation />
     </>
 );
 

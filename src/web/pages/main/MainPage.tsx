@@ -102,7 +102,7 @@ const MainPage = () => {
             <AquaForBuilders />
 
             <SectionWrapper>
-                <Community />
+                <Community disableAnimation />
             </SectionWrapper>
         </PageContainer>
     );

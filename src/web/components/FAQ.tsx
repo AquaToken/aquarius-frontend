@@ -15,16 +15,22 @@ export type QuestionType = {
     answer: string | React.ReactNode;
 };
 
-const Container = styled.div<{ $visible: boolean }>`
+type AnimationProps = {
+    $animated: boolean;
+    $visible: boolean;
+};
+
+const Container = styled.div<AnimationProps>`
     ${commonMaxWidth};
     display: flex;
     width: 100%;
     padding: 5rem 4rem 0;
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    opacity: ${({ $animated }) => ($animated ? 0 : 1)};
+    transform: ${({ $animated }) => ($animated ? 'translateY(30px)' : 'none')};
+    ${({ $animated }) => $animated && 'transition: opacity 0.8s ease-out, transform 0.8s ease-out;'}
 
-    ${({ $visible }) =>
+    ${({ $animated, $visible }) =>
+        $animated &&
         $visible &&
         css`
             opacity: 1;
@@ -48,10 +54,11 @@ const QuestionsBlock = styled.div`
     width: 100%;
 `;
 
-const QuestionItem = styled.div<{ $visible: boolean; $delay: number }>`
-    opacity: 0;
+const QuestionItem = styled.div<AnimationProps & { $delay: number }>`
+    opacity: ${({ $animated }) => ($animated ? 0 : 1)};
 
-    ${({ $visible, $delay }) =>
+    ${({ $animated, $visible, $delay }) =>
+        $animated &&
         $visible &&
         css`
             ${slideUpSoftAnimation};
@@ -61,17 +68,28 @@ const QuestionItem = styled.div<{ $visible: boolean; $delay: number }>`
 
 interface Props {
     questions: QuestionType[];
+    disableAnimation?: boolean;
 }
 
-const FAQ: React.FC<Props> = ({ questions }) => {
+const FAQ: React.FC<Props> = ({ questions, disableAnimation = false }) => {
     const { ref, visible } = useScrollAnimation(0.2, true);
+    const animated = !disableAnimation;
 
     return (
-        <Container ref={ref as React.RefObject<HTMLDivElement>} $visible={visible}>
+        <Container
+            ref={ref as React.RefObject<HTMLDivElement>}
+            $animated={animated}
+            $visible={visible}
+        >
             <Contacts />
             <QuestionsBlock>
                 {questions.map((question, index) => (
-                    <QuestionItem key={question.question} $visible={visible} $delay={index * 0.1}>
+                    <QuestionItem
+                        key={question.question}
+                        $animated={animated}
+                        $visible={visible}
+                        $delay={index * 0.1}
+                    >
                         <Question question={question.question} answer={question.answer} />
                     </QuestionItem>
                 ))}
