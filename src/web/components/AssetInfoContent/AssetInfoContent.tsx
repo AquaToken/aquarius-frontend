@@ -2,10 +2,14 @@ import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 
-import { getRegistryAssetMarketStatsRequest } from 'api/asset-registry';
+import { getPoolsWithAssets, getTokenStatsRequest } from 'api/amm';
+import { getIncentives } from 'api/incentives';
 import { getAssetDetails } from 'api/stellar-expert';
 
-import { getAssetString } from 'helpers/assets';
+import { AppRoutes } from 'constants/routes';
+
+import { contractValueToFormattedAmount, tpsToDailyAmount } from 'helpers/amount';
+import { getAssetString, getEnvClassicAssetData } from 'helpers/assets';
 import { getDateString } from 'helpers/date';
 import getExplorerLink, { ExplorerSection } from 'helpers/explorer-links';
 import { formatBalance } from 'helpers/format-number';
@@ -17,12 +21,12 @@ import useAssetsStore from 'store/assetsStore/useAssetsStore';
 
 import { resolveToml } from 'services/stellar/utils/resolvers';
 
+import { PoolProcessed, TokenStats } from 'types/amm';
 import { ExpertAssetData } from 'types/api-stellar-expert';
 import { AssetInfo } from 'types/asset-info';
+import { IncentiveProcessed } from 'types/incentives';
 import { StellarToml as StellarTomlType } from 'types/stellar';
-import { ClassicToken } from 'types/token';
-
-import { RegistryAssetMarketStatsMap } from 'web/pages/asset-registry/pages/AssetRegistryMainPage/AssetRegistryMainPage.types';
+import { ClassicToken, Token } from 'types/token';
 
 import Mail from 'assets/community/email16.svg';
 import Git from 'assets/community/github16.svg';
@@ -38,6 +42,9 @@ import Tooltip, { TOOLTIP_POSITION } from 'basics/Tooltip';
 import Changes24 from 'components/Changes24';
 import PublicKeyWithIcon from 'components/PublicKeyWithIcon';
 
+import { getFilteredPairsList } from 'pages/vote/api/api';
+import { Bribe } from 'pages/vote/api/types';
+
 import {
     AssetWrap,
     ContactLink,
@@ -48,6 +55,9 @@ import {
     InfoIconWrap,
     InfoLabelWrap,
     Links,
+    PoolsLink,
+    Section,
+    SectionTitle,
     TopRow,
 } from './AssetInfoContent.styled';
 
@@ -62,18 +72,80 @@ type AssetInfoContentProps = {
     badge?: React.ReactNode;
 };
 
+type AssetRewardSummary = {
+    bribes: Bribe[];
+    incentives: IncentiveProcessed[];
+    aquaRewards: PoolProcessed[];
+    poolsCount: number;
+};
+
+const isSameToken = (left: ClassicToken, right: Token | ClassicToken) => {
+    if (
+        'contract' in right &&
+        left.contract &&
+        right.contract &&
+        left.contract === right.contract
+    ) {
+        return true;
+    }
+
+    return getAssetString(left) === getAssetString(right as ClassicToken);
+};
+
+const getGroupedDailyRewardsView = (
+    rewards: Array<{ amount: string; code: string; issuer?: string | null }>,
+) => {
+    const groupedRewards = rewards.reduce<Map<string, { amount: number; code: string }>>(
+        (acc, reward) => {
+            const key = `${reward.code}-${reward.issuer ?? 'native'}`;
+            const currentValue = acc.get(key);
+
+            if (currentValue) {
+                currentValue.amount += Number(reward.amount);
+                return acc;
+            }
+
+            acc.set(key, {
+                amount: Number(reward.amount),
+                code: reward.code,
+            });
+
+            return acc;
+        },
+        new Map(),
+    );
+
+    if (!groupedRewards.size) {
+        return '—';
+    }
+
+    return Array.from(groupedRewards.values())
+        .map(({ amount, code }) => `${formatBalance(amount, true)} ${code} per day`)
+        .join(', ');
+};
+
+const getCountLabel = (count: number, singular: string, plural: string) =>
+    `${count} ${count === 1 ? singular : plural}`;
+
 const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactNode => {
     const [tomlInfo, setTomlInfo] = useState<StellarTomlType>({});
     const [expertData, setExpertData] = useState<ExpertAssetData | null>();
-    const [marketStats, setMarketStats] = useState<RegistryAssetMarketStatsMap>({});
-    const [isMarketStatsLoading, setIsMarketStatsLoading] = useState(true);
+    const [tokenStats, setTokenStats] = useState<TokenStats | null>(null);
+    const [isTokenStatsLoading, setIsTokenStatsLoading] = useState(true);
+    const [assetRewards, setAssetRewards] = useState<AssetRewardSummary>({
+        bribes: [],
+        incentives: [],
+        aquaRewards: [],
+        poolsCount: 0,
+    });
+    const [isAssetRewardsLoading, setIsAssetRewardsLoading] = useState(true);
     const { assetsInfo } = useAssetsStore();
     const isMounted = useIsMounted();
 
     const { desc, home_domain } = assetsInfo.get(getAssetString(asset)) || {};
     const assetInfo: Partial<AssetInfo> = asset.isNative()
         ? LumenInfo
-        : assetsInfo.get(getAssetString(asset));
+        : (assetsInfo.get(getAssetString(asset)) ?? {});
 
     useEffect(() => {
         if (!home_domain) {
@@ -109,25 +181,78 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
     }, [asset, isMounted]);
 
     useEffect(() => {
-        setIsMarketStatsLoading(true);
+        if (!asset.contract) {
+            setTokenStats(null);
+            setIsTokenStatsLoading(false);
+            return;
+        }
 
-        getRegistryAssetMarketStatsRequest()
+        setIsTokenStatsLoading(true);
+
+        getTokenStatsRequest(asset.contract)
             .then(stats => {
                 if (isMounted.current) {
-                    setMarketStats(stats);
+                    setTokenStats(stats);
                 }
             })
             .catch(() => {
                 if (isMounted.current) {
-                    setMarketStats({});
+                    setTokenStats(null);
                 }
             })
             .finally(() => {
                 if (isMounted.current) {
-                    setIsMarketStatsLoading(false);
+                    setIsTokenStatsLoading(false);
                 }
             });
-    }, [isMounted]);
+    }, [asset.contract, isMounted]);
+
+    useEffect(() => {
+        setIsAssetRewardsLoading(true);
+
+        Promise.all([
+            getIncentives(),
+            getFilteredPairsList(
+                {
+                    code: asset.code,
+                    issuer: asset.isNative() ? '' : (asset.issuer ?? ''),
+                },
+                null,
+                200,
+                1,
+            ),
+            getPoolsWithAssets([asset]),
+        ])
+            .then(([incentives, { pairs }, pools]) => {
+                if (!isMounted.current) {
+                    return;
+                }
+
+                setAssetRewards({
+                    bribes: pairs.flatMap(pair => pair.aggregated_bribes ?? []),
+                    incentives: incentives.filter(incentive =>
+                        incentive.pool.tokens.some(poolToken => isSameToken(asset, poolToken)),
+                    ),
+                    aquaRewards: pools.filter(pool => Number(pool.reward_tps) > 0),
+                    poolsCount: pools.length,
+                });
+            })
+            .catch(() => {
+                if (isMounted.current) {
+                    setAssetRewards({
+                        bribes: [],
+                        incentives: [],
+                        aquaRewards: [],
+                        poolsCount: 0,
+                    });
+                }
+            })
+            .finally(() => {
+                if (isMounted.current) {
+                    setIsAssetRewardsLoading(false);
+                }
+            });
+    }, [asset, isMounted]);
 
     const xLink = useMemo(() => {
         if (!tomlInfo?.DOCUMENTATION?.ORG_TWITTER) {
@@ -162,22 +287,75 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
         .filter(Boolean)
         .join(', ');
 
-    const currentMarketStats = marketStats[asset.contract];
-
-    const getUsdAmountView = (value?: number) => {
-        if (isMarketStatsLoading) {
+    const getUsdAmountView = (value?: string | number | null) => {
+        if (isTokenStatsLoading) {
             return <DotsLoader />;
         }
 
-        if (value === undefined) {
+        if (value === undefined || value === null || value === '') {
             return '—';
         }
 
-        return `$${formatBalance(value, true, true)}`;
+        return `$${contractValueToFormattedAmount(value, 7, true, true)}`;
     };
 
-    const renderInfoTooltip = () => (
-        <Tooltip content="Data from Aquarius AMM." position={TOOLTIP_POSITION.top} showOnHover>
+    const getPoolsCountView = () => {
+        if (isAssetRewardsLoading) {
+            return <DotsLoader />;
+        }
+
+        return assetRewards.poolsCount;
+    };
+
+    const getRewardsView = (type: keyof AssetRewardSummary) => {
+        if (isAssetRewardsLoading) {
+            return <DotsLoader />;
+        }
+
+        if (type === 'incentives') {
+            return getGroupedDailyRewardsView(
+                assetRewards.incentives.map(incentive => ({
+                    amount: tpsToDailyAmount(incentive.tps, incentive.tokenInstance.decimal),
+                    code: incentive.tokenInstance.code,
+                })),
+            );
+        }
+
+        if (type === 'aquaRewards') {
+            if (!assetRewards.aquaRewards.length) {
+                return '—';
+            }
+
+            const totalTps = assetRewards.aquaRewards.reduce(
+                (acc, pool) => acc + Number(pool.reward_tps),
+                0,
+            );
+            const { code: aquaCode } = getEnvClassicAssetData('aqua');
+
+            return `${tpsToDailyAmount(totalTps.toString(), 7)} ${aquaCode} per day`;
+        }
+
+        return getGroupedDailyRewardsView(
+            assetRewards.bribes.map(bribe => ({
+                amount: bribe.daily_amount,
+                code: bribe.asset_code,
+                issuer: bribe.asset_issuer,
+            })),
+        );
+    };
+
+    const incentivesPoolsCount = assetRewards.incentives.length;
+    const bribesMarketsCount = new Set(assetRewards.bribes.map(bribe => bribe.market_key)).size;
+    const aquaRewardsPoolsCount = assetRewards.aquaRewards.length;
+    const incentivesSectionItemsCount =
+        Number(Boolean(assetRewards.aquaRewards.length)) +
+        Number(Boolean(assetRewards.incentives.length)) +
+        Number(Boolean(assetRewards.bribes.length));
+    const incentivesSectionPlaceholdersCount = Math.max(0, 3 - incentivesSectionItemsCount);
+    const hasIncentivesSection = incentivesSectionItemsCount > 0;
+
+    const renderCountTooltip = (content: string) => (
+        <Tooltip content={content} position={TOOLTIP_POSITION.top} showOnHover>
             <InfoIconWrap>
                 <IconInfo />
             </InfoIconWrap>
@@ -225,88 +403,162 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
             </Links>
             {expertData !== undefined ? (
                 expertData ? (
-                    <Details>
-                        <Detail>
-                            <span>Asset holders:</span>
-                            <span>{formatBalance(expertData.trustlines[0])}</span>
-                        </Detail>
-                        {!asset.isNative() && (
-                            <Detail>
-                                <span>First transaction:</span>
-                                <span>{getDateString(expertData.created * 1000)}</span>
-                            </Detail>
-                        )}
-                        <Detail>
-                            <span>
-                                <InfoLabelWrap>
-                                    TVL
-                                    {renderInfoTooltip()}
-                                </InfoLabelWrap>
-                            </span>
-                            <span>{getUsdAmountView(currentMarketStats?.tvlUsd)}</span>
-                        </Detail>
-                        <Detail>
-                            <span>
-                                <InfoLabelWrap>
-                                    Volume 24H
-                                    {renderInfoTooltip()}
-                                </InfoLabelWrap>
-                            </span>
-                            <span>{getUsdAmountView(currentMarketStats?.volumeUsd)}</span>
-                        </Detail>
-                        <Detail>
-                            <span>Overall payments volume:</span>
-                            <span>
-                                {formatBalance(expertData.payments_amount / 1e7, true, true)}{' '}
-                                {asset.code}
-                            </span>
-                        </Detail>
-                        <Detail>
-                            <span>Overall trading volume:</span>
-                            <span>
-                                {formatBalance(expertData.traded_amount / 1e7, true, true)}{' '}
-                                {asset.code}
-                            </span>
-                        </Detail>
-                        <Detail>
-                            <span>Current price:</span>
-                            <span>
-                                $
-                                {formatBalance(
-                                    expertData.price7d?.[expertData.price7d.length - 1]?.[1] ?? 0,
-                                    true,
+                    <>
+                        <Section>
+                            <Details>
+                                <Detail>
+                                    <span>Asset Holders:</span>
+                                    <span>{formatBalance(expertData.trustlines[0])}</span>
+                                </Detail>
+                                {!asset.isNative() && (
+                                    <Detail>
+                                        <span>First Transaction:</span>
+                                        <span>{getDateString(expertData.created * 1000)}</span>
+                                    </Detail>
                                 )}
-                            </span>
-                        </Detail>
-                        <Detail>
-                            <span>24h change:</span>
-                            <Changes24 expertData={expertData} />
-                        </Detail>
-                        {!asset.isNative() && asset.issuer && (
-                            <Detail>
-                                <span>Issuer:</span>
-                                <CopyButtonStyled text={asset.issuer}>
-                                    <PublicKeyWithIcon pubKey={asset.issuer} />
-                                </CopyButtonStyled>
-                            </Detail>
+
+                                <Detail>
+                                    <span>Current Price:</span>
+                                    <span>
+                                        $
+                                        {formatBalance(
+                                            expertData.price7d?.[
+                                                expertData.price7d.length - 1
+                                            ]?.[1] ?? 0,
+                                            true,
+                                        )}
+                                    </span>
+                                </Detail>
+                                <Detail>
+                                    <span>24H Change:</span>
+                                    <Changes24 expertData={expertData} />
+                                </Detail>
+                                <Detail>
+                                    <span>Authorization Flags:</span>
+                                    <span>{authorizationFlags || 'None'}</span>
+                                </Detail>
+                                <Detail>
+                                    <span>Supply Status:</span>
+                                    <span>
+                                        {assetInfo.is_supply_locked ? 'Locked' : 'Unlocked'}
+                                    </span>
+                                </Detail>
+                                {!asset.isNative() && asset.issuer && (
+                                    <Detail>
+                                        <span>Issuer:</span>
+                                        <CopyButtonStyled text={asset.issuer}>
+                                            <PublicKeyWithIcon pubKey={asset.issuer} />
+                                        </CopyButtonStyled>
+                                    </Detail>
+                                )}
+                                {!asset.isNative() && asset.contract && (
+                                    <Detail>
+                                        <span>Contract Address:</span>
+                                        <CopyButtonStyled text={asset.contract}>
+                                            <PublicKeyWithIcon pubKey={asset.contract} />
+                                        </CopyButtonStyled>
+                                    </Detail>
+                                )}
+                                <Detail />
+                            </Details>
+                        </Section>
+
+                        <Section>
+                            <SectionTitle>Asset Stats on Aquarius</SectionTitle>
+                            <Details>
+                                <Detail>
+                                    <span>
+                                        <InfoLabelWrap>TVL</InfoLabelWrap>
+                                    </span>
+                                    <span>{getUsdAmountView(tokenStats?.tvl_usd)}</span>
+                                </Detail>
+                                <Detail>
+                                    <span>
+                                        <InfoLabelWrap>Total Volume</InfoLabelWrap>
+                                    </span>
+                                    <span>{getUsdAmountView(tokenStats?.total_volume_usd)}</span>
+                                </Detail>
+                                <Detail>
+                                    <span>
+                                        <InfoLabelWrap>
+                                            Daily Avg. Volume
+                                            {renderCountTooltip('30-day average')}
+                                        </InfoLabelWrap>
+                                    </span>
+                                    <span>{getUsdAmountView(tokenStats?.volume_24h_usd)}</span>
+                                </Detail>
+                            </Details>
+                            <PoolsLink
+                                to={`${AppRoutes.section.amm.link.index}?search=${asset.contract}`}
+                            >
+                                {getPoolsCountView()} pools with {asset.code}
+                            </PoolsLink>
+                        </Section>
+
+                        {hasIncentivesSection && (
+                            <Section>
+                                <SectionTitle>Incentives for {asset.code}</SectionTitle>
+                                <Details>
+                                    {Boolean(assetRewards.aquaRewards.length) && (
+                                        <Detail>
+                                            <span>
+                                                <InfoLabelWrap>
+                                                    Current AQUA Rewards
+                                                    {renderCountTooltip(
+                                                        `Paid in ${getCountLabel(
+                                                            aquaRewardsPoolsCount,
+                                                            'pool',
+                                                            'pools',
+                                                        )}`,
+                                                    )}
+                                                </InfoLabelWrap>
+                                            </span>
+                                            <span>{getRewardsView('aquaRewards')}</span>
+                                        </Detail>
+                                    )}
+                                    {Boolean(assetRewards.incentives.length) && (
+                                        <Detail>
+                                            <span>
+                                                <InfoLabelWrap>
+                                                    Current Incentives
+                                                    {renderCountTooltip(
+                                                        `Paid in ${getCountLabel(
+                                                            incentivesPoolsCount,
+                                                            'pool',
+                                                            'pools',
+                                                        )}.`,
+                                                    )}
+                                                </InfoLabelWrap>
+                                            </span>
+                                            <span>{getRewardsView('incentives')}</span>
+                                        </Detail>
+                                    )}
+                                    {Boolean(assetRewards.bribes.length) && (
+                                        <Detail>
+                                            <span>
+                                                <InfoLabelWrap>
+                                                    Current Bribes
+                                                    {renderCountTooltip(
+                                                        `Paid in ${getCountLabel(
+                                                            bribesMarketsCount,
+                                                            'market',
+                                                            'markets',
+                                                        )}.`,
+                                                    )}
+                                                </InfoLabelWrap>
+                                            </span>
+                                            <span>{getRewardsView('bribes')}</span>
+                                        </Detail>
+                                    )}
+                                    {Array.from({
+                                        length: incentivesSectionPlaceholdersCount,
+                                    }).map((_, index) => (
+                                        <Detail key={`incentives-placeholder-${index}`} />
+                                    ))}
+                                </Details>
+                            </Section>
                         )}
-                        {!asset.isNative() && asset.contract && (
-                            <Detail>
-                                <span>Contract address:</span>
-                                <CopyButtonStyled text={asset.contract}>
-                                    <PublicKeyWithIcon pubKey={asset.contract} />
-                                </CopyButtonStyled>
-                            </Detail>
-                        )}
-                        <Detail>
-                            <span>Authorization flags:</span>
-                            <span>{authorizationFlags || 'None'}</span>
-                        </Detail>
-                        <Detail>
-                            <span>Supply status:</span>
-                            <span>{assetInfo.is_supply_locked ? 'Locked' : 'Unlocked'}</span>
-                        </Detail>
-                    </Details>
+                    </>
                 ) : null
             ) : (
                 <PageLoader />

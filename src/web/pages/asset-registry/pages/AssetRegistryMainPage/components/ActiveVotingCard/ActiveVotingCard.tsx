@@ -62,9 +62,13 @@ import {
 import AssetRegistryStatusBadge from '../AssetRegistryStatusBadge/AssetRegistryStatusBadge';
 
 type ActiveVotingCardProps = {
-    marketStats: RegistryAssetMarketStatsMap;
-    isMarketStatsLoading: boolean;
-    upcomingVotes: UpcomingVoteData[];
+    marketStats?: RegistryAssetMarketStatsMap;
+    isMarketStatsLoading?: boolean;
+    upcomingVotes?: UpcomingVoteData[];
+    proposal?: Proposal | null;
+    hideStats?: boolean;
+    hideDetailsLink?: boolean;
+    className?: string;
 };
 
 const getEndsInLabel = (proposal: Proposal) => {
@@ -86,11 +90,15 @@ const getEndsInLabel = (proposal: Proposal) => {
 };
 
 const ActiveVotingCard = ({
-    marketStats,
-    isMarketStatsLoading,
-    upcomingVotes,
+    marketStats = {},
+    isMarketStatsLoading = false,
+    upcomingVotes = [],
+    proposal: proposalProp,
+    hideStats = false,
+    hideDetailsLink = false,
+    className,
 }: ActiveVotingCardProps) => {
-    const [activeVoting, setActiveVoting] = useState<Proposal | null>(null);
+    const [activeVoting, setActiveVoting] = useState<Proposal | null>(proposalProp ?? null);
     const [selectedOption, setSelectedOption] = useState<{
         option: VoteOptions;
         key: string;
@@ -100,6 +108,11 @@ const ActiveVotingCard = ({
     const { isLogged } = useAuthStore();
 
     useEffect(() => {
+        if (proposalProp) {
+            setActiveVoting(proposalProp);
+            return undefined;
+        }
+
         let isCancelled = false;
 
         getActiveRegistryVotingRequest()
@@ -117,7 +130,7 @@ const ActiveVotingCard = ({
         return () => {
             isCancelled = true;
         };
-    }, []);
+    }, [proposalProp]);
     const nextVoting = upcomingVotes[0] ?? null;
     const isActiveVoting = Boolean(activeVoting);
     const assetCode = activeVoting?.asset_code ?? nextVoting?.assetCode ?? null;
@@ -200,7 +213,7 @@ const ActiveVotingCard = ({
     };
 
     const renderInfoTooltip = () => (
-        <Tooltip content="Data from Aquarius AMM." position={TOOLTIP_POSITION.top} showOnHover>
+        <Tooltip content="Data from Aquarius AMM" position={TOOLTIP_POSITION.top} showOnHover>
             <InfoIconWrap>
                 <IconInfo />
             </InfoIconWrap>
@@ -226,7 +239,7 @@ const ActiveVotingCard = ({
     };
 
     return (
-        <Card>
+        <Card className={className}>
             <CardTitle>{isActiveVoting ? 'Active Voting' : 'Next Voting'}</CardTitle>
 
             <Header>
@@ -256,37 +269,41 @@ const ActiveVotingCard = ({
                 ) : null}
             </Header>
 
-            <Stats>
-                <Meta>
-                    <MetaLabel>Asset Holders</MetaLabel>
-                    <MetaValue>{assetHolders}</MetaValue>
-                </Meta>
-                <Meta>
-                    <MetaLabel>
-                        <InfoLabelWrap>
-                            TVL
-                            {renderInfoTooltip()}
-                        </InfoLabelWrap>
-                    </MetaLabel>
-                    <MetaValue>{getUsdAmountView(currentMarketStats?.tvlUsd)}</MetaValue>
-                </Meta>
-                <Meta>
-                    <MetaLabel>
-                        <InfoLabelWrap>
-                            Volume 24H
-                            {renderInfoTooltip()}
-                        </InfoLabelWrap>
-                    </MetaLabel>
-                    <MetaValue>{getUsdAmountView(currentMarketStats?.volumeUsd)}</MetaValue>
-                </Meta>
-            </Stats>
+            {!hideStats && (
+                <>
+                    <Stats>
+                        <Meta>
+                            <MetaLabel>Asset Holders</MetaLabel>
+                            <MetaValue>{assetHolders}</MetaValue>
+                        </Meta>
+                        <Meta>
+                            <MetaLabel>
+                                <InfoLabelWrap>
+                                    TVL
+                                    {renderInfoTooltip()}
+                                </InfoLabelWrap>
+                            </MetaLabel>
+                            <MetaValue>{getUsdAmountView(currentMarketStats?.tvlUsd)}</MetaValue>
+                        </Meta>
+                        <Meta>
+                            <MetaLabel>
+                                <InfoLabelWrap>
+                                    Volume 24H
+                                    {renderInfoTooltip()}
+                                </InfoLabelWrap>
+                            </MetaLabel>
+                            <MetaValue>{getUsdAmountView(currentMarketStats?.volumeUsd)}</MetaValue>
+                        </Meta>
+                    </Stats>
 
-            <Divider />
+                    <Divider />
+                </>
+            )}
 
             {isActiveVoting && activeVoting ? (
                 <>
                     <Section>
-                        <MetaValue>Current results</MetaValue>
+                        <MetaValue>Current Results</MetaValue>
                         <CurrentResults
                             proposal={activeVoting}
                             withResultLabel={false}
@@ -295,7 +312,7 @@ const ActiveVotingCard = ({
                     </Section>
 
                     <Section>
-                        <MetaValue>Your vote</MetaValue>
+                        <MetaValue>Your Vote</MetaValue>
                         <VotingButtonsRow>
                             <ForButton
                                 fullWidth
@@ -351,15 +368,17 @@ const ActiveVotingCard = ({
                         </MetaValue>
                     </FooterRow>
 
-                    <DetailsLink
-                        to={AppRoutes.section.assetRegistry.to.voting({
-                            id: String(activeVoting.id),
-                        })}
-                    >
-                        <Button isRounded fullWidth>
-                            Details
-                        </Button>
-                    </DetailsLink>
+                    {!hideDetailsLink && (
+                        <DetailsLink
+                            to={AppRoutes.section.assetRegistry.to.voting({
+                                id: String(activeVoting.id),
+                            })}
+                        >
+                            <Button isRounded fullWidth>
+                                Details
+                            </Button>
+                        </DetailsLink>
+                    )}
                 </>
             ) : (
                 <FooterRow>

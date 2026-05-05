@@ -171,7 +171,7 @@ const AssetRegistryListItem = ({
         return `$${formatBalance(value, true, true)}`;
     };
 
-    const tooltipContent = 'Data from Aquarius AMM.';
+    const tooltipContent = 'Data from Aquarius AMM';
     const renderInfoTooltip = () => (
         <Tooltip content={tooltipContent} position={TOOLTIP_POSITION.top} showOnHover>
             <InfoIconWrap>

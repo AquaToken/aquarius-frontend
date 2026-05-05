@@ -56,15 +56,15 @@ const SupportedByBar = ({
 const AssetRegistryVoteHistory = ({ rows }: AssetRegistryVoteHistoryProps) => (
     <>
         <Header>
-            <VoteTitle>Votes history</VoteTitle>
+            <VoteTitle>Vote history</VoteTitle>
         </Header>
         <HistoryTable>
             <Table
                 head={[
-                    { children: 'Date:' },
-                    { children: 'Propose to:' },
-                    { children: 'Supported by:', align: CellAlign.Right },
-                    { children: 'Results:', align: CellAlign.Right },
+                    { children: 'Date' },
+                    { children: 'Proposed to' },
+                    { children: 'Supported by', align: CellAlign.Right },
+                    { children: 'Results', align: CellAlign.Right },
                 ]}
                 body={rows.map(row => ({
                     key: row.id,
@@ -82,7 +82,7 @@ const AssetRegistryVoteHistory = ({ rows }: AssetRegistryVoteHistoryProps) => (
                                     withIcon
                                 />
                             ),
-                            label: 'Propose to:',
+                            label: 'Proposed to:',
                         },
                         {
                             children: (

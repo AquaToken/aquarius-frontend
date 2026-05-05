@@ -28,6 +28,7 @@ import {
     PoolUserProcessed,
     PoolVolume24h,
     RewardType,
+    TokenStats,
     UserReward,
 } from 'types/amm';
 import { ClassicToken, Token, TokenType } from 'types/token';
@@ -107,6 +108,14 @@ export const getPoolsWithAssets = (assets: Asset[]): Promise<PoolProcessed[]> =>
     return axios
         .get<ListResponse<Pool>>(`${baseUrl}/pools/?tokens__in=${params}`)
         .then(res => processPools(res.data.items));
+};
+
+export const getTokenStatsRequest = async (contractId: string): Promise<TokenStats> => {
+    const baseUrl = getAmmAquaUrl();
+
+    const { data } = await axios.get<TokenStats>(`${baseUrl}/tokens/${contractId}/stats/`);
+
+    return data;
 };
 export const getPoolInfo = async (id: string): Promise<PoolProcessed> => {
     const baseUrl = getAmmAquaUrl();
