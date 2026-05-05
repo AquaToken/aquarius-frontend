@@ -509,7 +509,7 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
                                                             aquaRewardsPoolsCount,
                                                             'pool',
                                                             'pools',
-                                                        )}.`,
+                                                        )}`,
                                                     )}
                                                 </InfoLabelWrap>
                                             </span>

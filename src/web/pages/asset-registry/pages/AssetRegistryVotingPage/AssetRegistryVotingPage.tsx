@@ -148,7 +148,7 @@ const AssetRegistryVotingPage = (): ReactElement => {
                     <Header>
                         <CircleButton
                             to={AppRoutes.section.assetRegistry.link.index}
-                            label="Asset registry list"
+                            label="Asset Registry List"
                         >
                             <ArrowLeft />
                         </CircleButton>
