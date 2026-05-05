@@ -145,7 +145,7 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
     const { desc, home_domain } = assetsInfo.get(getAssetString(asset)) || {};
     const assetInfo: Partial<AssetInfo> = asset.isNative()
         ? LumenInfo
-        : assetsInfo.get(getAssetString(asset));
+        : (assetsInfo.get(getAssetString(asset)) ?? {});
 
     useEffect(() => {
         if (!home_domain) {
