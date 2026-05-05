@@ -485,7 +485,9 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
                                             {renderCountTooltip('30-day average')}
                                         </InfoLabelWrap>
                                     </span>
-                                    <span>{getUsdAmountView(tokenStats?.volume_24h_usd)}</span>
+                                    <span>
+                                        {getUsdAmountView(tokenStats?.daily_average_volume_30d_usd)}
+                                    </span>
                                 </Detail>
                             </Details>
                             <PoolsLink

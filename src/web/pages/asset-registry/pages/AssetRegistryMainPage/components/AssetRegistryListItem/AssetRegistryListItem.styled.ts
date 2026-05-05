@@ -15,18 +15,18 @@ export const ItemCard = styled.article`
     border-radius: 3.2rem;
     padding: 2.8rem 3.2rem;
 
-    ${respondDown(Breakpoints.md)`
+    ${respondDown(Breakpoints.xl)`
         padding: 2.4rem;
     `}
 `;
 
 export const Summary = styled.div`
     display: grid;
-    grid-template-columns: 22rem 1fr;
+    grid-template-columns: 16rem 1fr;
     column-gap: 1.2rem;
     align-items: center;
 
-    ${respondDown(Breakpoints.md)`
+    ${respondDown(Breakpoints.xl)`
         grid-template-columns: minmax(0, 1fr) 4rem;
         row-gap: 1.6rem;
         grid-template-areas:
@@ -34,7 +34,8 @@ export const Summary = styled.div`
             'asset asset'
             'holders holders'
             'tvl tvl'
-            'volume volume';
+            'total-volume total-volume'
+            'daily-volume daily-volume';
     `}
 `;
 
@@ -42,10 +43,10 @@ export const SummaryLeft = styled.div`
     ${flexAllCenter};
     gap: 1.6rem;
     min-width: 0;
-    width: 22rem;
+    width: 16rem;
     justify-content: flex-start;
 
-    ${respondDown(Breakpoints.md)`
+    ${respondDown(Breakpoints.xl)`
         grid-area: asset;
         width: 100%;
     `}
@@ -53,12 +54,12 @@ export const SummaryLeft = styled.div`
 
 export const SummaryRight = styled.div`
     display: grid;
-    grid-template-columns: 11rem 9rem 12rem 12rem 4rem;
+    grid-template-columns: 11rem 9rem 12rem 12rem 12rem 4rem;
     column-gap: 1.2rem;
     align-items: center;
     justify-content: space-between;
 
-    ${respondDown(Breakpoints.md)`
+    ${respondDown(Breakpoints.xl)`
         display: contents;
     `}
 `;
@@ -70,7 +71,7 @@ export const Metric = styled.div`
 `;
 
 export const DesktopBadgeWrap = styled.div`
-    ${respondDown(Breakpoints.md)`
+    ${respondDown(Breakpoints.xl)`
         display: none;
     `}
 `;
@@ -78,7 +79,7 @@ export const DesktopBadgeWrap = styled.div`
 export const MobileBadgeWrap = styled.div`
     display: none;
 
-    ${respondDown(Breakpoints.md)`
+    ${respondDown(Breakpoints.xl)`
         display: block;
         grid-area: mobile-badge;
         min-width: 0;
@@ -102,7 +103,7 @@ export const MetricValue = styled.div`
 `;
 
 export const HoldersMetric = styled(Metric)`
-    ${respondDown(Breakpoints.md)`
+    ${respondDown(Breakpoints.xl)`
         grid-area: holders;
         ${flexRowSpaceBetween};
         gap: 1.6rem;
@@ -111,7 +112,7 @@ export const HoldersMetric = styled(Metric)`
 `;
 
 export const TvlMetric = styled(Metric)`
-    ${respondDown(Breakpoints.md)`
+    ${respondDown(Breakpoints.xl)`
         grid-area: tvl;
         ${flexRowSpaceBetween};
         gap: 1.6rem;
@@ -120,8 +121,17 @@ export const TvlMetric = styled(Metric)`
 `;
 
 export const VolumeMetric = styled(Metric)`
-    ${respondDown(Breakpoints.md)`
-        grid-area: volume;
+    ${respondDown(Breakpoints.xl)`
+        grid-area: total-volume;
+        ${flexRowSpaceBetween};
+        gap: 1.6rem;
+        width: 100%;
+    `}
+`;
+
+export const DailyVolumeMetric = styled(Metric)`
+    ${respondDown(Breakpoints.xl)`
+        grid-area: daily-volume;
         ${flexRowSpaceBetween};
         gap: 1.6rem;
         width: 100%;
@@ -145,7 +155,7 @@ export const ChevronButton = styled.button`
     cursor: pointer;
     justify-self: end;
 
-    ${respondDown(Breakpoints.md)`
+    ${respondDown(Breakpoints.xl)`
         grid-area: chevron;
     `}
 `;
@@ -156,7 +166,7 @@ export const ChevronPlaceholder = styled.div`
     flex-shrink: 0;
     justify-self: end;
 
-    ${respondDown(Breakpoints.md)`
+    ${respondDown(Breakpoints.xl)`
         grid-area: chevron;
     `}
 `;

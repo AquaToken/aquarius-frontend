@@ -5,6 +5,7 @@ import { getAssetDetails } from 'api/stellar-expert';
 
 import { PROPOSAL_STATUS } from 'constants/dao';
 
+import { contractValueToFormattedAmount } from 'helpers/amount';
 import { getAssetString } from 'helpers/assets';
 import { getDateString } from 'helpers/date';
 import { formatBalance } from 'helpers/format-number';
@@ -25,6 +26,7 @@ import {
     ChevronIconWrap,
     ChevronPlaceholder,
     DesktopBadgeWrap,
+    DailyVolumeMetric,
     HoldersMetric,
     InfoIconWrap,
     InfoLabelWrap,
@@ -159,7 +161,7 @@ const AssetRegistryListItem = ({
         return holders === undefined ? '—' : formatBalance(holders);
     }, [asset, assetsInfo, lumenHolders]);
 
-    const getUsdAmountView = (value?: number) => {
+    const getUsdAmountView = (value?: string) => {
         if (isMarketStatsLoading) {
             return <DotsLoader />;
         }
@@ -168,10 +170,10 @@ const AssetRegistryListItem = ({
             return '—';
         }
 
-        return `$${formatBalance(value, true, true)}`;
+        return `$${contractValueToFormattedAmount(value, 7, true, true)}`;
     };
 
-    const tooltipContent = 'Data from Aquarius AMM';
+    const tooltipContent = '30-day average';
     const renderInfoTooltip = () => (
         <Tooltip content={tooltipContent} position={TOOLTIP_POSITION.top} showOnHover>
             <InfoIconWrap>
@@ -204,23 +206,26 @@ const AssetRegistryListItem = ({
                         <MetricValue>{assetHolders}</MetricValue>
                     </HoldersMetric>
                     <TvlMetric>
-                        <MetricLabel>
-                            <InfoLabelWrap>
-                                TVL
-                                {renderInfoTooltip()}
-                            </InfoLabelWrap>
-                        </MetricLabel>
+                        <MetricLabel>TVL</MetricLabel>
                         <MetricValue>{getUsdAmountView(currentMarketStats?.tvlUsd)}</MetricValue>
                     </TvlMetric>
                     <VolumeMetric>
+                        <MetricLabel>Total Volume</MetricLabel>
+                        <MetricValue>
+                            {getUsdAmountView(currentMarketStats?.totalVolumeUsd)}
+                        </MetricValue>
+                    </VolumeMetric>
+                    <DailyVolumeMetric>
                         <MetricLabel>
                             <InfoLabelWrap>
-                                Volume 24H
+                                Daily Avg. Volume
                                 {renderInfoTooltip()}
                             </InfoLabelWrap>
                         </MetricLabel>
-                        <MetricValue>{getUsdAmountView(currentMarketStats?.volumeUsd)}</MetricValue>
-                    </VolumeMetric>
+                        <MetricValue>
+                            {getUsdAmountView(currentMarketStats?.dailyAverageVolumeUsd)}
+                        </MetricValue>
+                    </DailyVolumeMetric>
                     <DesktopBadgeWrap>
                         <AssetRegistryStatusBadge
                             variant={statusBadge.variant}
