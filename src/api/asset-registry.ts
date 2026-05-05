@@ -1,13 +1,11 @@
 import axios from 'axios';
 
-import { getNativePrices } from 'api/amm';
-import { getLumenUsdPrice } from 'api/price';
+import { getTokenStatsRequest } from 'api/amm';
 
-import { getAmmAquaUrl, getGovernanceUrl } from 'helpers/url';
+import { getGovernanceUrl } from 'helpers/url';
 
 import { ListResponse as GovernanceListResponse } from 'store/assetsStore/types';
 
-import { ListResponse, Pool } from 'types/amm';
 import { Proposal } from 'types/governance';
 
 import {
@@ -86,55 +84,30 @@ export const getRegistryVoteHistoryRequest = (
         .then(({ data }) => data.results);
 };
 
-const AMM_PAGE_SIZE = 500;
-const STELLAR_DECIMALS = 1e7;
+export const getRegistryAssetMarketStatsRequest = async (
+    contractIds: string[],
+): Promise<RegistryAssetMarketStatsMap> => {
+    const uniqueContractIds = [...new Set(contractIds.filter(Boolean))];
 
-const getAllAmmPools = async (): Promise<Pool[]> => {
-    const baseUrl = getAmmAquaUrl();
-    const pools: Pool[] = [];
-    let page = 1;
-    let totalPages = 1;
+    const stats = await Promise.all(
+        uniqueContractIds.map(contractId =>
+            getTokenStatsRequest(contractId)
+                .then(tokenStats => ({ contractId, tokenStats }))
+                .catch(() => null),
+        ),
+    );
 
-    while (page <= totalPages) {
-        const { data } = await axios.get<ListResponse<Pool>>(
-            `${baseUrl}/pools/?size=${AMM_PAGE_SIZE}&page=${page}`,
-        );
-
-        pools.push(...data.items);
-        totalPages = data.pages;
-        page += 1;
-    }
-
-    return pools;
-};
-
-export const getRegistryAssetMarketStatsRequest =
-    async (): Promise<RegistryAssetMarketStatsMap> => {
-        const [pools, nativePrices, lumenUsdPrice] = await Promise.all([
-            getAllAmmPools(),
-            getNativePrices(),
-            getLumenUsdPrice(),
-        ]);
-
-        return pools.reduce<RegistryAssetMarketStatsMap>((acc, pool) => {
-            pool.tokens_addresses.forEach((tokenAddress, index) => {
-                const reserve = Number(pool.reserves[index]);
-                const tokenPriceInXlm = Number(nativePrices.get(tokenAddress)?.price ?? 0);
-
-                if (!acc[tokenAddress]) {
-                    acc[tokenAddress] = {
-                        poolsCount: 0,
-                        tvlUsd: 0,
-                        volumeUsd: 0,
-                    };
-                }
-
-                acc[tokenAddress].poolsCount += 1;
-                acc[tokenAddress].tvlUsd +=
-                    (reserve / STELLAR_DECIMALS) * tokenPriceInXlm * lumenUsdPrice;
-                acc[tokenAddress].volumeUsd += Number(pool.volume_usd) / STELLAR_DECIMALS;
-            });
-
+    return stats.reduce<RegistryAssetMarketStatsMap>((acc, item) => {
+        if (!item) {
             return acc;
-        }, {});
-    };
+        }
+
+        acc[item.contractId] = {
+            tvlUsd: item.tokenStats.tvl_usd,
+            totalVolumeUsd: item.tokenStats.total_volume_usd,
+            dailyAverageVolumeUsd: item.tokenStats.daily_average_volume_30d_usd,
+        };
+
+        return acc;
+    }, {});
+};

@@ -8,8 +8,9 @@ import { VoteOptions } from 'constants/dao';
 import { DAY } from 'constants/intervals';
 import { AppRoutes } from 'constants/routes';
 
+import { contractValueToFormattedAmount } from 'helpers/amount';
 import { getAssetString } from 'helpers/assets';
-import { getDateString } from 'helpers/date';
+import { convertLocalDateToUTCIgnoringTimezone, getDateString } from 'helpers/date';
 import { formatBalance } from 'helpers/format-number';
 import { createAsset } from 'helpers/token';
 
@@ -40,6 +41,10 @@ import {
     CardTitle,
     DetailsLink,
     Divider,
+    EndInfoDate,
+    EndInfoLabel,
+    EndInfo,
+    EndInfoValue,
     FooterRow,
     ForButton,
     Header,
@@ -71,22 +76,32 @@ type ActiveVotingCardProps = {
     className?: string;
 };
 
-const getEndsInLabel = (proposal: Proposal) => {
+const getEndsInLabel = (proposal: Proposal, currentTimestamp: number) => {
     const { end_at: endAt } = proposal;
 
     if (!endAt) {
         return '—';
     }
 
-    const diff = new Date(endAt).getTime() - Date.now();
+    const diff = new Date(endAt).getTime() - currentTimestamp;
 
     if (diff <= 0) {
-        return '0 days';
+        return '0s';
     }
 
-    const days = Math.ceil(diff / DAY);
+    const seconds = Math.floor(diff / 1000) % 60;
+    const minutes = Math.floor(diff / (1000 * 60)) % 60;
+    const hours = Math.floor(diff / (1000 * 60 * 60)) % 24;
+    const days = Math.floor(diff / DAY);
 
-    return `${days} day${days === 1 ? '' : 's'}`;
+    const parts = [
+        days > 0 ? `${days}d` : null,
+        days > 0 || hours > 0 ? `${hours}h` : null,
+        days > 0 || hours > 0 || minutes > 0 ? `${minutes}m` : null,
+        `${seconds}s`,
+    ].filter(Boolean);
+
+    return parts.join(' ');
 };
 
 const ActiveVotingCard = ({
@@ -99,6 +114,7 @@ const ActiveVotingCard = ({
     className,
 }: ActiveVotingCardProps) => {
     const [activeVoting, setActiveVoting] = useState<Proposal | null>(proposalProp ?? null);
+    const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
     const [selectedOption, setSelectedOption] = useState<{
         option: VoteOptions;
         key: string;
@@ -131,6 +147,16 @@ const ActiveVotingCard = ({
             isCancelled = true;
         };
     }, [proposalProp]);
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            setCurrentTimestamp(Date.now());
+        }, 1000);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, []);
     const nextVoting = upcomingVotes[0] ?? null;
     const isActiveVoting = Boolean(activeVoting);
     const assetCode = activeVoting?.asset_code ?? nextVoting?.assetCode ?? null;
@@ -177,11 +203,11 @@ const ActiveVotingCard = ({
         }
     }, [isLogged, selectedOption]);
 
-    const assetHolders = useMemo(() => {
-        if (!asset) {
-            return '—';
-        }
+    if (!assetCode || !asset) {
+        return null;
+    }
 
+    const assetHolders = useMemo(() => {
         if (asset.isNative()) {
             return lumenHolders === null ? <DotsLoader /> : formatBalance(lumenHolders);
         }
@@ -191,16 +217,12 @@ const ActiveVotingCard = ({
         return holders === undefined ? '—' : formatBalance(holders);
     }, [asset, assetsInfo, lumenHolders]);
 
-    if (!assetCode || !asset) {
-        return null;
-    }
-
     const currentMarketStats = marketStats[assetContract ?? asset.contract];
     const endsAt = isActiveVoting && activeVoting ? activeVoting.end_at : null;
     const nextVotingStartsAt =
         !isActiveVoting && nextVoting ? nextVoting.startsAt.replace(/^Starts\s+/i, '') : null;
 
-    const getUsdAmountView = (value?: number) => {
+    const getUsdAmountView = (value?: string) => {
         if (isMarketStatsLoading) {
             return <DotsLoader />;
         }
@@ -209,11 +231,11 @@ const ActiveVotingCard = ({
             return '—';
         }
 
-        return `$${formatBalance(value, true, true)}`;
+        return `$${contractValueToFormattedAmount(value, 7, true, true)}`;
     };
 
     const renderInfoTooltip = () => (
-        <Tooltip content="Data from Aquarius AMM" position={TOOLTIP_POSITION.top} showOnHover>
+        <Tooltip content="30-day average" position={TOOLTIP_POSITION.top} showOnHover>
             <InfoIconWrap>
                 <IconInfo />
             </InfoIconWrap>
@@ -277,22 +299,25 @@ const ActiveVotingCard = ({
                             <MetaValue>{assetHolders}</MetaValue>
                         </Meta>
                         <Meta>
-                            <MetaLabel>
-                                <InfoLabelWrap>
-                                    TVL
-                                    {renderInfoTooltip()}
-                                </InfoLabelWrap>
-                            </MetaLabel>
+                            <MetaLabel>TVL</MetaLabel>
                             <MetaValue>{getUsdAmountView(currentMarketStats?.tvlUsd)}</MetaValue>
+                        </Meta>
+                        <Meta>
+                            <MetaLabel>Total Volume</MetaLabel>
+                            <MetaValue>
+                                {getUsdAmountView(currentMarketStats?.totalVolumeUsd)}
+                            </MetaValue>
                         </Meta>
                         <Meta>
                             <MetaLabel>
                                 <InfoLabelWrap>
-                                    Volume 24H
+                                    Daily Avg. Volume
                                     {renderInfoTooltip()}
                                 </InfoLabelWrap>
                             </MetaLabel>
-                            <MetaValue>{getUsdAmountView(currentMarketStats?.volumeUsd)}</MetaValue>
+                            <MetaValue>
+                                {getUsdAmountView(currentMarketStats?.dailyAverageVolumeUsd)}
+                            </MetaValue>
                         </Meta>
                     </Stats>
 
@@ -361,12 +386,17 @@ const ActiveVotingCard = ({
 
                     <Divider />
 
-                    <FooterRow>
-                        <MetaLabel>Ends in {getEndsInLabel(activeVoting)}</MetaLabel>
-                        <MetaValue>
-                            {endsAt ? getDateString(new Date(endsAt).getTime()) : '—'}
-                        </MetaValue>
-                    </FooterRow>
+                    <EndInfo>
+                        <EndInfoLabel>Voting ends in</EndInfoLabel>
+                        <EndInfoValue>
+                            {getEndsInLabel(activeVoting, currentTimestamp)}
+                        </EndInfoValue>
+                        <EndInfoDate>
+                            {endsAt
+                                ? `${getDateString(convertLocalDateToUTCIgnoringTimezone(new Date(endsAt)).getTime(), { withTime: true }).replace(/, (\d{2}:\d{2})$/, ' · $1')} UTC`
+                                : '—'}
+                        </EndInfoDate>
+                    </EndInfo>
 
                     {!hideDetailsLink && (
                         <DetailsLink

@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { ToggleGroup } from 'basics/inputs';
+import { Select, ToggleGroup } from 'basics/inputs';
 
 import { commonMaxWidth, flexRowSpaceBetween, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS, FONT_SIZE } from 'styles/style-constants';
@@ -42,8 +42,17 @@ export const Toolbar = styled.div`
 export const FilterGroup = styled(ToggleGroup)`
     width: fit-content;
 
-    ${respondDown(Breakpoints.md)`
+    ${respondDown(Breakpoints.sm)`
+        display: none;
+    `}
+`;
+
+export const FilterSelect = styled(Select)`
+    display: none;
+
+    ${respondDown(Breakpoints.sm)`
         width: 100%;
+        display: flex;
     `}
 `;
 

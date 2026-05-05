@@ -11,6 +11,7 @@ import {
 
 import { getEnvClassicAssetData } from 'helpers/assets';
 import { convertLocalDateToUTCIgnoringTimezone, getDateString } from 'helpers/date';
+import { createAsset } from 'helpers/token';
 
 import useAuthStore from 'store/authStore/useAuthStore';
 
@@ -29,6 +30,7 @@ import { COLORS } from 'styles/style-constants';
 
 import {
     FilterGroup,
+    FilterSelect,
     MainSection,
     SearchInputWrap,
     Title,
@@ -139,7 +141,7 @@ const MOCK_UPCOMING_VOTES: UpcomingVoteData[] = MOCK_UPCOMING_VOTES_ASSETS.map(
 const AssetRegistryMainPage = () => {
     const [filter, setFilter] = useState(AssetRegistryFilter.all);
     const [search, setSearch] = useState('');
-    const [apiRegistryAssets, setApiRegistryAssets] = useState<RegistryAsset[]>([]);
+    const [apiRegistryAssets, setApiRegistryAssets] = useState<RegistryAsset[]>(null);
     const [apiUpcomingVotes, setApiUpcomingVotes] = useState<UpcomingVoteData[]>([]);
     const [myVoteProposals, setMyVoteProposals] = useState<RegistryProposalPreview[]>([]);
     const [historyVoteProposals, setHistoryVoteProposals] = useState<RegistryProposalPreview[]>([]);
@@ -286,11 +288,29 @@ const AssetRegistryMainPage = () => {
     }, []);
 
     useEffect(() => {
+        if (!apiRegistryAssets) return;
+
         let isCancelled = false;
 
         setIsMarketStatsLoading(true);
 
-        getRegistryAssetMarketStatsRequest()
+        const allAssetsContracts = [
+            ...DEFAULT_REGISTRY_ASSETS,
+            ...apiRegistryAssets.filter(({ proposals }) =>
+                proposals.some(
+                    ({ proposal_status }) =>
+                        proposal_status === 'VOTED' || proposal_status === 'VOTING',
+                ),
+            ),
+        ]
+            .filter(asset => asset.asset_code)
+            .map(
+                asset =>
+                    asset.asset_contract_address ??
+                    createAsset(asset.asset_code as string, asset.asset_issuer ?? '').contract,
+            );
+
+        getRegistryAssetMarketStatsRequest(allAssetsContracts)
             .then(data => {
                 if (!isCancelled) {
                     setMarketStats(data);
@@ -310,7 +330,7 @@ const AssetRegistryMainPage = () => {
         return () => {
             isCancelled = true;
         };
-    }, []);
+    }, [apiRegistryAssets]);
 
     const upcomingVotes = useMemo<UpcomingVoteData[]>(
         () => (apiUpcomingVotes.length ? apiUpcomingVotes : MOCK_UPCOMING_VOTES),
@@ -319,11 +339,12 @@ const AssetRegistryMainPage = () => {
 
     const items = useMemo(() => {
         const defaultIds = new Set(DEFAULT_REGISTRY_ASSETS.map(getRegistryAssetId));
-        const uniqueApiRegistryAssets = apiRegistryAssets.filter(
-            asset =>
-                !defaultIds.has(getRegistryAssetId(asset)) &&
-                asset.proposals.some(proposal => proposal.proposal_status === 'VOTED'),
-        );
+        const uniqueApiRegistryAssets =
+            apiRegistryAssets?.filter(
+                asset =>
+                    !defaultIds.has(getRegistryAssetId(asset)) &&
+                    asset.proposals.some(proposal => proposal.proposal_status === 'VOTED'),
+            ) ?? [];
 
         return [...DEFAULT_REGISTRY_ASSETS, ...uniqueApiRegistryAssets];
     }, [apiRegistryAssets]);
@@ -383,6 +404,12 @@ const AssetRegistryMainPage = () => {
                     toolbar={
                         <Toolbar>
                             <FilterGroup
+                                value={filter}
+                                options={FILTER_OPTIONS}
+                                onChange={onFilterChange}
+                            />
+
+                            <FilterSelect
                                 value={filter}
                                 options={FILTER_OPTIONS}
                                 onChange={onFilterChange}
