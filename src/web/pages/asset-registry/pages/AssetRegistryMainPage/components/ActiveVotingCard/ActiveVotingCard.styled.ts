@@ -85,6 +85,31 @@ export const FooterRow = styled.div`
     gap: 1.6rem;
 `;
 
+export const EndInfo = styled.div`
+    ${flexColumn};
+    gap: 0.4rem;
+    align-items: center;
+    border-radius: 2.4rem;
+    text-align: center;
+`;
+
+export const EndInfoLabel = styled.div`
+    ${FONT_SIZE.sm};
+    color: ${COLORS.textPrimary};
+`;
+
+export const EndInfoValue = styled.div`
+    font-size: 2rem;
+    line-height: 2.8rem;
+    font-weight: 700;
+    color: ${COLORS.textPrimary};
+`;
+
+export const EndInfoDate = styled.div`
+    ${FONT_SIZE.sm};
+    color: ${COLORS.textPrimary};
+`;
+
 export const VotingButtonsRow = styled.div`
     display: flex;
     gap: 0.4rem;

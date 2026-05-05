@@ -9,7 +9,11 @@ import { DAY } from 'constants/intervals';
 import { AppRoutes } from 'constants/routes';
 
 import { getAssetString } from 'helpers/assets';
-import { getDateString } from 'helpers/date';
+import {
+    convertLocalDateToUTCIgnoringTimezone,
+    convertUTCToLocalDateIgnoringTimezone,
+    getDateString,
+} from 'helpers/date';
 import { formatBalance } from 'helpers/format-number';
 import { createAsset } from 'helpers/token';
 
@@ -40,6 +44,10 @@ import {
     CardTitle,
     DetailsLink,
     Divider,
+    EndInfoDate,
+    EndInfoLabel,
+    EndInfo,
+    EndInfoValue,
     FooterRow,
     ForButton,
     Header,
@@ -71,22 +79,32 @@ type ActiveVotingCardProps = {
     className?: string;
 };
 
-const getEndsInLabel = (proposal: Proposal) => {
+const getEndsInLabel = (proposal: Proposal, currentTimestamp: number) => {
     const { end_at: endAt } = proposal;
 
     if (!endAt) {
         return '—';
     }
 
-    const diff = new Date(endAt).getTime() - Date.now();
+    const diff = new Date(endAt).getTime() - currentTimestamp;
 
     if (diff <= 0) {
-        return '0 days';
+        return '0s';
     }
 
-    const days = Math.ceil(diff / DAY);
+    const seconds = Math.floor(diff / 1000) % 60;
+    const minutes = Math.floor(diff / (1000 * 60)) % 60;
+    const hours = Math.floor(diff / (1000 * 60 * 60)) % 24;
+    const days = Math.floor(diff / DAY);
 
-    return `${days} day${days === 1 ? '' : 's'}`;
+    const parts = [
+        days > 0 ? `${days}d` : null,
+        days > 0 || hours > 0 ? `${hours}h` : null,
+        days > 0 || hours > 0 || minutes > 0 ? `${minutes}m` : null,
+        `${seconds}s`,
+    ].filter(Boolean);
+
+    return parts.join(' ');
 };
 
 const ActiveVotingCard = ({
@@ -99,6 +117,7 @@ const ActiveVotingCard = ({
     className,
 }: ActiveVotingCardProps) => {
     const [activeVoting, setActiveVoting] = useState<Proposal | null>(proposalProp ?? null);
+    const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
     const [selectedOption, setSelectedOption] = useState<{
         option: VoteOptions;
         key: string;
@@ -131,6 +150,16 @@ const ActiveVotingCard = ({
             isCancelled = true;
         };
     }, [proposalProp]);
+
+    useEffect(() => {
+        const intervalId = window.setInterval(() => {
+            setCurrentTimestamp(Date.now());
+        }, 1000);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, []);
     const nextVoting = upcomingVotes[0] ?? null;
     const isActiveVoting = Boolean(activeVoting);
     const assetCode = activeVoting?.asset_code ?? nextVoting?.assetCode ?? null;
@@ -361,12 +390,17 @@ const ActiveVotingCard = ({
 
                     <Divider />
 
-                    <FooterRow>
-                        <MetaLabel>Ends in {getEndsInLabel(activeVoting)}</MetaLabel>
-                        <MetaValue>
-                            {endsAt ? getDateString(new Date(endsAt).getTime()) : '—'}
-                        </MetaValue>
-                    </FooterRow>
+                    <EndInfo>
+                        <EndInfoLabel>Voting ends in</EndInfoLabel>
+                        <EndInfoValue>
+                            {getEndsInLabel(activeVoting, currentTimestamp)}
+                        </EndInfoValue>
+                        <EndInfoDate>
+                            {endsAt
+                                ? `${getDateString(convertLocalDateToUTCIgnoringTimezone(new Date(endsAt)).getTime(), { withTime: true }).replace(/, (\d{2}:\d{2})$/, ' · $1')} UTC`
+                                : '—'}
+                        </EndInfoDate>
+                    </EndInfo>
 
                     {!hideDetailsLink && (
                         <DetailsLink
