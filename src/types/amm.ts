@@ -245,3 +245,15 @@ type BaseUserReward<T> = {
 export type UserAquaReward = BaseUserReward<RewardType.aquaReward> & { amount: number };
 export type UserIncentive = BaseUserReward<RewardType.incentive> & { incentives: PoolIncentives[] };
 export type UserReward = UserAquaReward | UserIncentive;
+
+export type TokenStats = {
+    address: string;
+    tvl: string;
+    tvl_usd: string;
+    volume_24h: string;
+    volume_24h_usd: string;
+    total_volume: string;
+    total_volume_usd: string;
+    daily_average_volume_30d: string;
+    daily_average_volume_30d_usd: string;
+};
