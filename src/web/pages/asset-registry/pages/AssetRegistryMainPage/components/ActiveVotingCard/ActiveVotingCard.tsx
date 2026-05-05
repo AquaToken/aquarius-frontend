@@ -292,9 +292,7 @@ const ActiveVotingCard = ({
                                     {renderInfoTooltip()}
                                 </InfoLabelWrap>
                             </MetaLabel>
-                            <MetaValue>
-                                {getUsdAmountView(currentMarketStats?.volumeUsd)}
-                            </MetaValue>
+                            <MetaValue>{getUsdAmountView(currentMarketStats?.volumeUsd)}</MetaValue>
                         </Meta>
                     </Stats>
 
