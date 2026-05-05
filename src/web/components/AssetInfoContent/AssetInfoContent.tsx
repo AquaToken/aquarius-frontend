@@ -2,14 +2,13 @@ import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 
-import { getPoolsWithAssets } from 'api/amm';
-import { getRegistryAssetMarketStatsRequest } from 'api/asset-registry';
+import { getPoolsWithAssets, getTokenStatsRequest } from 'api/amm';
 import { getIncentives } from 'api/incentives';
 import { getAssetDetails } from 'api/stellar-expert';
 
 import { AppRoutes } from 'constants/routes';
 
-import { tpsToDailyAmount } from 'helpers/amount';
+import { contractValueToFormattedAmount, tpsToDailyAmount } from 'helpers/amount';
 import { getAssetString, getEnvClassicAssetData } from 'helpers/assets';
 import { getDateString } from 'helpers/date';
 import getExplorerLink, { ExplorerSection } from 'helpers/explorer-links';
@@ -22,14 +21,12 @@ import useAssetsStore from 'store/assetsStore/useAssetsStore';
 
 import { resolveToml } from 'services/stellar/utils/resolvers';
 
-import { PoolProcessed } from 'types/amm';
+import { PoolProcessed, TokenStats } from 'types/amm';
 import { ExpertAssetData } from 'types/api-stellar-expert';
 import { AssetInfo } from 'types/asset-info';
 import { IncentiveProcessed } from 'types/incentives';
 import { StellarToml as StellarTomlType } from 'types/stellar';
 import { ClassicToken, Token } from 'types/token';
-
-import { RegistryAssetMarketStatsMap } from 'web/pages/asset-registry/pages/AssetRegistryMainPage/AssetRegistryMainPage.types';
 
 import Mail from 'assets/community/email16.svg';
 import Git from 'assets/community/github16.svg';
@@ -55,6 +52,7 @@ import {
     Description,
     Detail,
     Details,
+    InfoIconWrap,
     InfoLabelWrap,
     Links,
     PoolsLink,
@@ -78,6 +76,7 @@ type AssetRewardSummary = {
     bribes: Bribe[];
     incentives: IncentiveProcessed[];
     aquaRewards: PoolProcessed[];
+    poolsCount: number;
 };
 
 const isSameToken = (left: ClassicToken, right: Token | ClassicToken) => {
@@ -131,12 +130,13 @@ const getCountLabel = (count: number, singular: string, plural: string) =>
 const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactNode => {
     const [tomlInfo, setTomlInfo] = useState<StellarTomlType>({});
     const [expertData, setExpertData] = useState<ExpertAssetData | null>();
-    const [marketStats, setMarketStats] = useState<RegistryAssetMarketStatsMap>({});
-    const [isMarketStatsLoading, setIsMarketStatsLoading] = useState(true);
+    const [tokenStats, setTokenStats] = useState<TokenStats | null>(null);
+    const [isTokenStatsLoading, setIsTokenStatsLoading] = useState(true);
     const [assetRewards, setAssetRewards] = useState<AssetRewardSummary>({
         bribes: [],
         incentives: [],
         aquaRewards: [],
+        poolsCount: 0,
     });
     const [isAssetRewardsLoading, setIsAssetRewardsLoading] = useState(true);
     const { assetsInfo } = useAssetsStore();
@@ -181,25 +181,31 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
     }, [asset, isMounted]);
 
     useEffect(() => {
-        setIsMarketStatsLoading(true);
+        if (!asset.contract) {
+            setTokenStats(null);
+            setIsTokenStatsLoading(false);
+            return;
+        }
 
-        getRegistryAssetMarketStatsRequest()
+        setIsTokenStatsLoading(true);
+
+        getTokenStatsRequest(asset.contract)
             .then(stats => {
                 if (isMounted.current) {
-                    setMarketStats(stats);
+                    setTokenStats(stats);
                 }
             })
             .catch(() => {
                 if (isMounted.current) {
-                    setMarketStats({});
+                    setTokenStats(null);
                 }
             })
             .finally(() => {
                 if (isMounted.current) {
-                    setIsMarketStatsLoading(false);
+                    setIsTokenStatsLoading(false);
                 }
             });
-    }, [isMounted]);
+    }, [asset.contract, isMounted]);
 
     useEffect(() => {
         setIsAssetRewardsLoading(true);
@@ -228,6 +234,7 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
                         incentive.pool.tokens.some(poolToken => isSameToken(asset, poolToken)),
                     ),
                     aquaRewards: pools.filter(pool => Number(pool.reward_tps) > 0),
+                    poolsCount: pools.length,
                 });
             })
             .catch(() => {
@@ -236,6 +243,7 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
                         bribes: [],
                         incentives: [],
                         aquaRewards: [],
+                        poolsCount: 0,
                     });
                 }
             })
@@ -279,26 +287,24 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
         .filter(Boolean)
         .join(', ');
 
-    const currentMarketStats = marketStats[asset.contract];
-
-    const getUsdAmountView = (value?: number) => {
-        if (isMarketStatsLoading) {
+    const getUsdAmountView = (value?: string | number | null) => {
+        if (isTokenStatsLoading) {
             return <DotsLoader />;
         }
 
-        if (value === undefined) {
+        if (value === undefined || value === null || value === '') {
             return '—';
         }
 
-        return `$${formatBalance(value, true, true)}`;
+        return `$${contractValueToFormattedAmount(value, 7, true, true)}`;
     };
 
     const getPoolsCountView = () => {
-        if (isMarketStatsLoading) {
+        if (isAssetRewardsLoading) {
             return <DotsLoader />;
         }
 
-        return currentMarketStats?.poolsCount ?? 0;
+        return assetRewards.poolsCount;
     };
 
     const getRewardsView = (type: keyof AssetRewardSummary) => {
@@ -350,7 +356,9 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
 
     const renderCountTooltip = (content: string) => (
         <Tooltip content={content} position={TOOLTIP_POSITION.top} showOnHover>
-            <IconInfo />
+            <InfoIconWrap>
+                <IconInfo />
+            </InfoIconWrap>
         </Tooltip>
     );
 
@@ -462,15 +470,23 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
                                     <span>
                                         <InfoLabelWrap>TVL</InfoLabelWrap>
                                     </span>
-                                    <span>{getUsdAmountView(currentMarketStats?.tvlUsd)}</span>
+                                    <span>{getUsdAmountView(tokenStats?.tvl_usd)}</span>
                                 </Detail>
                                 <Detail>
                                     <span>
-                                        <InfoLabelWrap>Volume 24H</InfoLabelWrap>
+                                        <InfoLabelWrap>Overall volume</InfoLabelWrap>
                                     </span>
-                                    <span>{getUsdAmountView(currentMarketStats?.volumeUsd)}</span>
+                                    <span>{getUsdAmountView(tokenStats?.total_volume_usd)}</span>
                                 </Detail>
-                                <Detail />
+                                <Detail>
+                                    <span>
+                                        <InfoLabelWrap>
+                                            Avg. daily volume
+                                            {renderCountTooltip('30-day average')}
+                                        </InfoLabelWrap>
+                                    </span>
+                                    <span>{getUsdAmountView(tokenStats?.volume_24h_usd)}</span>
+                                </Detail>
                             </Details>
                             <PoolsLink
                                 to={`${AppRoutes.section.amm.link.index}?search=${asset.contract}`}
