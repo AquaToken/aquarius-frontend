@@ -1,11 +1,5 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
-import {
-    containerScrollAnimation,
-    fadeInScale,
-    fadeInUpAnimation,
-    fadeInUpDelayed,
-} from 'styles/animations';
 import { respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS, FONT_SIZE } from 'styles/style-constants';
 
@@ -13,18 +7,11 @@ import { Breakpoints, COLORS, FONT_SIZE } from 'styles/style-constants';
 /*                                  Layout                                    */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Wrapper container for the FreezeAQUA section.
- * Handles positioning, spacing, and fade-in visibility.
- */
-export const Container = styled.div<{ $visible: boolean }>`
+export const Container = styled.div`
     display: flex;
     align-items: center;
     gap: 9rem;
     padding: 6rem 4rem;
-
-    ${containerScrollAnimation};
-
     ${respondDown(Breakpoints.sm)`
         flex-direction: column-reverse;
         gap: 3.2rem;
@@ -35,13 +22,10 @@ export const Container = styled.div<{ $visible: boolean }>`
 /**
  * Text column wrapper (title, description, link).
  */
-export const TextBlock = styled.div<{ $visible: boolean }>`
+export const TextBlock = styled.div`
     display: flex;
     flex-direction: column;
     width: 50%;
-    opacity: 0;
-
-    ${({ $visible }) => $visible && fadeInUpAnimation}
 
     ${respondDown(Breakpoints.sm)`
         width: 100%;
@@ -65,14 +49,11 @@ export const Title = styled.h2`
 /**
  * Main text block (description).
  */
-export const Description = styled.p<{ $visible: boolean }>`
+export const Description = styled.p`
     font-size: 1.6rem;
     color: ${COLORS.textDark};
     margin: 3rem 0;
     line-height: 1.8;
-    opacity: 0;
-
-    ${({ $visible }) => $visible && fadeInUpDelayed}
 
     b {
         color: ${COLORS.textPrimary};
@@ -82,17 +63,9 @@ export const Description = styled.p<{ $visible: boolean }>`
 /**
  * Image wrapper for the right-side illustration.
  */
-export const ImageWrapper = styled.div<{ $visible: boolean }>`
+export const ImageWrapper = styled.div`
     width: 40%;
     margin: -5rem auto 0;
-    opacity: 0;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${fadeInScale};
-            animation-delay: 0.4s;
-        `}
 
     ${respondDown(Breakpoints.sm)`
         width: 100%;

@@ -1,42 +1,27 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 import ArrowAlt16 from 'assets/icons/arrows/arrow-alt-16.svg';
 
 import { BlankRouterLink } from 'basics/links';
 
-import {
-    containerScrollAnimation,
-    fadeAppearAnimation,
-    slideUpSoftAnimation,
-} from 'styles/animations';
 import { cardBoxShadow, flexAllCenter, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS } from 'styles/style-constants';
 
-export const Wrapper = styled.section<{ $visible: boolean }>`
+export const Wrapper = styled.section`
     ${flexAllCenter};
     flex-direction: column;
     margin-top: 11rem;
-    ${containerScrollAnimation};
 
     ${respondDown(Breakpoints.md)`margin-top: 6rem; font-size: 6rem;`};
     ${respondDown(Breakpoints.sm)`margin-top: 0`};
     ${respondDown(Breakpoints.xs)`margin-top: 1.6rem;`};
 `;
 
-export const Title = styled.div<{ $visible: boolean }>`
+export const Title = styled.div`
     font-weight: bold;
     font-size: 7rem;
     color: ${COLORS.textPrimary};
     line-height: 100%;
-    opacity: 0;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${fadeAppearAnimation};
-            animation-delay: 0.1s;
-        `}
-
     ${respondDown(Breakpoints.md)`font-size: 5.6rem;`};
     ${respondDown(Breakpoints.sm)`font-size: 3.2rem;`};
     ${respondDown(Breakpoints.xs)`font-size: 2.4rem;`};
@@ -51,21 +36,12 @@ export const BlocksWrapper = styled.div`
     ${respondDown(Breakpoints.sm)`flex-direction: column; gap: 0;`};
 `;
 
-export const IconBlock = styled.div<{ $visible: boolean }>`
+export const IconBlock = styled.div`
     display: flex;
     flex-direction: column;
     flex: 1;
     width: 50%;
     position: relative;
-    opacity: 0;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: 0.1s;
-        `}
-
     ${respondDown(Breakpoints.sm)`
     justify-content: center;
     align-items: center;
@@ -73,7 +49,7 @@ export const IconBlock = styled.div<{ $visible: boolean }>`
   `}
 `;
 
-export const TokensBlock = styled.div<{ $visible: boolean }>`
+export const TokensBlock = styled.div`
     display: flex;
     justify-content: space-between;
     flex-direction: column;
@@ -81,15 +57,6 @@ export const TokensBlock = styled.div<{ $visible: boolean }>`
     flex: 1;
     width: 50%;
     gap: 2.4rem;
-    opacity: 0;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: 0.25s;
-        `}
-
     ${respondDown(Breakpoints.sm)`width: 100%; gap: 1.6rem;`};
 `;
 

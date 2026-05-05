@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 import { getAquaInPoolsSum, getAquaPoolsMembers, getAquaXlmRate } from 'api/amm';
 
@@ -9,8 +9,6 @@ import { AppRoutes } from 'constants/routes';
 import { getEnvClassicAssetData } from 'helpers/assets';
 import { formatBalance } from 'helpers/format-number';
 import { createLumen } from 'helpers/token';
-
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
 
 import { StellarService } from 'services/globalServices';
 
@@ -21,25 +19,16 @@ import { DotsLoader } from 'basics/loaders';
 import Changes24 from 'components/Changes24';
 import Price from 'components/Price';
 
-import { slideUpSoftAnimation, containerScrollAnimation } from 'styles/animations';
 import { cardBoxShadow, commonMaxWidth, flexRowSpaceBetween, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS } from 'styles/style-constants';
 
 /* ------------------------------- styled ------------------------------- */
 
-const Container = styled.section<{ $visible: boolean }>`
+const Container = styled.section`
     padding: 0 10rem;
     ${commonMaxWidth};
     margin-top: 8rem;
     width: 100%;
-    opacity: 0;
-    ${containerScrollAnimation};
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-        `}
 
     ${respondDown(Breakpoints.sm)`
         padding: 0 1.6rem;
@@ -65,18 +54,10 @@ const Description = styled.p`
     margin: 1.6rem 0 0;
 `;
 
-const Blocks = styled.div<{ $visible: boolean }>`
+const Blocks = styled.div`
     display: flex;
     gap: 6rem;
     margin-top: 4.6rem;
-    opacity: 0;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: 0.15s;
-        `}
 
     ${respondDown(Breakpoints.md)`
         flex-direction: column;
@@ -158,8 +139,6 @@ const OPTIONS = [
 /* ----------------------------- component ----------------------------- */
 
 const AquaPerformance = () => {
-    const { ref, visible } = useScrollAnimation(0.25, true);
-
     const [sdexCounter, setSdexCounter] = useState(SDEX_ASSETS.xlm);
     const [aquaInAmmSum, setAquaInAmmSum] = useState(null);
     const [aquaInAmmMembers, setAquaInAmmMembers] = useState(null);
@@ -189,12 +168,12 @@ const AquaPerformance = () => {
     }, [counter]);
 
     return (
-        <Container ref={ref as React.RefObject<HTMLDivElement>} $visible={visible}>
+        <Container>
             <Title>AQUA performance</Title>
             <Description>
                 AQUA drives liquidity and rewards activity across Stellar DEX and AMM markets.
             </Description>
-            <Blocks $visible={visible}>
+            <Blocks>
                 <Block>
                     <BlockHeader>
                         <h3>On Aquarius AMM</h3>

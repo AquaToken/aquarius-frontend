@@ -5,8 +5,6 @@ import { AppRoutes } from 'constants/routes';
 import { getAssetString, getEnvClassicAssetData } from 'helpers/assets';
 import { createLumen } from 'helpers/token';
 
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
-
 import PoolsBlockIcon from 'assets/main-page/pools-block.svg';
 import SwapBlockIcon from 'assets/main-page/swap-block.svg';
 
@@ -27,12 +25,10 @@ import {
 } from './AquaSoroban.styled';
 
 const AquaSoroban: React.FC = () => {
-    const { ref, visible } = useScrollAnimation(0.2, true);
-
     return (
-        <Wrapper ref={ref as React.RefObject<HTMLDivElement>} $visible={visible} id="aqua-soroban">
-            <InnerWrapper $visible={visible}>
-                <SorobanStarsStyled $visible={visible} />
+        <Wrapper id="aqua-soroban">
+            <InnerWrapper>
+                <SorobanStarsStyled />
                 <Title>
                     Aquarius AMMs <TitleBold>run on Soroban smart contracts</TitleBold> — powering a
                     new generation of DeFi on Stellar.
@@ -40,7 +36,7 @@ const AquaSoroban: React.FC = () => {
             </InnerWrapper>
 
             <SorobanBlocks>
-                <Block $visible={visible} $delay={0.1}>
+                <Block>
                     <BlockWithIcon>
                         <SwapBlockIcon />
                         <BlockDesc>
@@ -59,7 +55,7 @@ const AquaSoroban: React.FC = () => {
                     </BlankRouterLink>
                 </Block>
 
-                <Block $visible={visible} $delay={0.25}>
+                <Block>
                     <BlockWithIcon>
                         <PoolsBlockIcon />
                         <BlockDesc>

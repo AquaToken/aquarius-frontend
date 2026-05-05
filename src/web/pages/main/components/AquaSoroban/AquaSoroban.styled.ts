@@ -1,23 +1,17 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 import ArrowAlt16 from 'assets/icons/arrows/arrow-alt-16.svg';
 import SorobanStars from 'assets/main-page/soroban-stars.svg';
 
 import { Button } from 'basics/buttons';
 
-import {
-    containerScrollAnimation,
-    fadeAppearAnimation,
-    slideUpSoftAnimation,
-} from 'styles/animations';
 import { flexAllCenter, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS } from 'styles/style-constants';
 
-export const Wrapper = styled.section<{ $visible: boolean }>`
+export const Wrapper = styled.section`
     ${flexAllCenter};
     flex-direction: column;
     margin-top: 11rem;
-    ${containerScrollAnimation};
 
     ${respondDown(Breakpoints.sm)`
     margin-top: 6.4rem;
@@ -28,19 +22,12 @@ export const Wrapper = styled.section<{ $visible: boolean }>`
   `}
 `;
 
-export const InnerWrapper = styled.div<{ $visible: boolean }>`
+export const InnerWrapper = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
     max-width: 79rem;
     text-align: center;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${fadeAppearAnimation};
-            animation-delay: 0.15s;
-        `}
 `;
 
 export const Title = styled.span`
@@ -59,16 +46,8 @@ export const TitleBold = styled(Title)`
     color: ${COLORS.purple500};
 `;
 
-export const SorobanStarsStyled = styled(SorobanStars)<{ $visible: boolean }>`
+export const SorobanStarsStyled = styled(SorobanStars)`
     margin-bottom: 2.4rem;
-    opacity: 0;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: 0.05s;
-        `}
 `;
 
 export const SorobanBlocks = styled.div`
@@ -88,7 +67,7 @@ export const SorobanBlocks = styled.div`
   `}
 `;
 
-export const Block = styled.div<{ $visible: boolean; $delay: number }>`
+export const Block = styled.div`
     background-color: ${COLORS.gray50};
     display: flex;
     justify-content: space-between;
@@ -97,15 +76,6 @@ export const Block = styled.div<{ $visible: boolean; $delay: number }>`
     border-radius: 4.8rem;
     padding: 4.8rem;
     width: 50%;
-    opacity: 0;
-
-    ${({ $visible, $delay }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: ${$delay}s;
-        `}
-
     ${respondDown(Breakpoints.sm)`
     padding: 3.2rem;
     width: 100%;

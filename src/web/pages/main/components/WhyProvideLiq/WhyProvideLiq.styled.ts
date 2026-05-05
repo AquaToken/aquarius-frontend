@@ -1,54 +1,31 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
-import {
-    containerScrollAnimation,
-    slideUpSoftAnimation,
-    fadeAppearAnimation,
-} from 'styles/animations';
 import { flexAllCenter, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS } from 'styles/style-constants';
 
-export const Wrapper = styled.section<{ $visible: boolean }>`
+export const Wrapper = styled.section`
     ${flexAllCenter};
     flex-direction: column;
     margin-top: 11rem;
-    ${containerScrollAnimation};
 
     ${respondDown(Breakpoints.lg)`font-size: 10rem;`};
     ${respondDown(Breakpoints.md)`font-size: 7rem; margin-top: 6rem;`};
     ${respondDown(Breakpoints.xs)`font-size: 4rem; margin-top: 4rem;`};
 `;
 
-export const WhyTitle = styled.div<{ $visible: boolean }>`
+export const WhyTitle = styled.div`
     font-weight: bold;
     font-size: 7rem;
     color: ${COLORS.textPrimary};
     line-height: 100%;
-    opacity: 0;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: 0.1s;
-        `}
-
     ${respondDown(Breakpoints.md)`font-size: 5.6rem;`};
     ${respondDown(Breakpoints.sm)`font-size: 3.2rem;`};
 `;
 
-export const WhyStats = styled.div<{ $visible: boolean }>`
+export const WhyStats = styled.div`
     display: flex;
     flex-direction: column;
     gap: 0.8rem;
-    opacity: 0;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${fadeAppearAnimation};
-            animation-delay: 0.2s;
-        `}
 
     ${respondDown(Breakpoints.sm)`
     justify-content: center;
@@ -79,7 +56,7 @@ export const ShowOnSm = styled(Block)`
     ${respondDown(Breakpoints.sm)`display: flex; flex-direction: column; align-items: center;`};
 `;
 
-export const InfoBlock = styled(Block)<{ $visible: boolean }>`
+export const InfoBlock = styled(Block)`
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -87,31 +64,14 @@ export const InfoBlock = styled(Block)<{ $visible: boolean }>`
     flex: 1;
     width: 50%;
     gap: 6.4rem;
-    opacity: 0;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: 0.25s;
-        `}
-
     ${respondDown(Breakpoints.md)`gap: 3.2rem;`};
     ${respondDown(Breakpoints.sm)`width: 100%; flex-direction: column;`};
 `;
 
-export const InfoWrapper = styled.div<{ $delay: number; $visible: boolean }>`
+export const InfoWrapper = styled.div`
     display: flex;
     gap: 1.6rem;
     width: 100%;
-    opacity: 0;
-
-    ${({ $visible, $delay }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: ${$delay}s;
-        `}
 
     svg {
         flex: 0 0 auto;

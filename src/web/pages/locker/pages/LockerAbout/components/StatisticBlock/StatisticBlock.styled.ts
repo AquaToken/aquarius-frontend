@@ -1,9 +1,8 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 import Aqua from 'assets/aqua/aqua-logo.svg';
 import Ice from 'assets/tokens/ice-logo.svg';
 
-import { slideUpSoftAnimation, containerScrollAnimation } from 'styles/animations';
 import { respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS } from 'styles/style-constants';
 
@@ -11,11 +10,7 @@ import { Breakpoints, COLORS } from 'styles/style-constants';
 /*                                  Layout                                    */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Container for all statistic cards.
- * Fades and slides in on scroll using containerScrollAnimation.
- */
-export const Container = styled.div<{ $visible: boolean }>`
+export const Container = styled.div`
     display: flex;
     flex-wrap: wrap;
     padding: 4rem;
@@ -23,32 +18,18 @@ export const Container = styled.div<{ $visible: boolean }>`
     gap: 6rem;
     width: 100%;
     background-color: ${COLORS.white};
-
-    ${containerScrollAnimation}
-
     ${respondDown(Breakpoints.sm)`
     padding: 1.6rem;
   `}
 `;
 
-/**
- * Single statistic card — animates softly upward with delay.
- */
-export const StatisticItem = styled.div<{ $visible: boolean; $delay: number }>`
+export const StatisticItem = styled.div`
     display: flex;
     flex-direction: column;
     padding: 3.6rem 3.9rem;
     background: ${COLORS.gray50};
     border-radius: 4.4rem;
     flex: 1 1 20rem;
-    opacity: 0;
-
-    ${({ $visible, $delay }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: ${$delay}s;
-        `}
 
     ${respondDown(Breakpoints.sm)`
     flex: 1 1 100%;

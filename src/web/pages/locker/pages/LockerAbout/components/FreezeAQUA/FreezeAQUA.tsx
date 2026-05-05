@@ -1,7 +1,5 @@
 import * as React from 'react';
 
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
-
 import FreezeAquaImage from 'assets/locker/freeze-aqua.svg';
 
 import { ExternalLink } from 'basics/links';
@@ -9,13 +7,11 @@ import { ExternalLink } from 'basics/links';
 import { Container, TextBlock, Title, Description, ImageWrapper } from './FreezeAQUA.styled';
 
 const FreezeAQUA: React.FC = () => {
-    const { ref, visible } = useScrollAnimation(0.2, true);
-
     return (
-        <Container ref={ref} $visible={visible}>
-            <TextBlock $visible={visible}>
+        <Container>
+            <TextBlock>
                 <Title>Freeze AQUA, Get ICE</Title>
-                <Description $visible={visible}>
+                <Description>
                     <b>Freeze your AQUA to receive ICE</b> — a non-transferable token that gives you
                     more influence over how rewards are distributed across AMM and SDEX markets. ICE
                     also boosts your earnings through bribes for voting and higher yields from
@@ -35,7 +31,7 @@ const FreezeAQUA: React.FC = () => {
                 </ExternalLink>
             </TextBlock>
 
-            <ImageWrapper $visible={visible}>
+            <ImageWrapper>
                 <FreezeAquaImage />
             </ImageWrapper>
         </Container>

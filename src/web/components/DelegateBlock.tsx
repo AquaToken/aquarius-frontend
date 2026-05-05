@@ -19,16 +19,22 @@ import { Breakpoints, COLORS } from 'styles/style-constants';
 
 /* ------------------------------- STYLED PART ------------------------------ */
 
-const Container = styled.section<{ $visible: boolean }>`
+type AnimationProps = {
+    $animated: boolean;
+    $visible: boolean;
+};
+
+const Container = styled.section<AnimationProps>`
     width: 100%;
     background-color: ${COLORS.white};
     margin-top: 8rem;
     display: flex;
     justify-content: center;
-    opacity: 0;
-    ${containerScrollAnimation};
+    opacity: ${({ $animated }) => ($animated ? 0 : 1)};
+    ${({ $animated }) => $animated && containerScrollAnimation};
 
-    ${({ $visible }) =>
+    ${({ $animated, $visible }) =>
+        $animated &&
         $visible &&
         css`
             ${slideUpSoftAnimation};
@@ -54,15 +60,16 @@ const LogoStyled = styled.img`
     width: 40.9rem;
 `;
 
-const LogoWrapper = styled.div<{ $visible: boolean }>`
+const LogoWrapper = styled.div<AnimationProps>`
     ${flexAllCenter};
     background-color: ${COLORS.gray50};
     border-radius: 8rem;
     flex: 1;
     position: relative;
-    opacity: 0;
+    opacity: ${({ $animated }) => ($animated ? 0 : 1)};
 
-    ${({ $visible }) =>
+    ${({ $animated, $visible }) =>
+        $animated &&
         $visible &&
         css`
             ${slideUpSoftAnimation};
@@ -75,13 +82,14 @@ const LogoWrapper = styled.div<{ $visible: boolean }>`
     `}
 `;
 
-const ContentWrapper = styled.div<{ $visible: boolean }>`
+const ContentWrapper = styled.div<AnimationProps>`
     ${flexColumn};
     padding: 1.9rem 0;
     flex: 1;
-    opacity: 0;
+    opacity: ${({ $animated }) => ($animated ? 0 : 1)};
 
-    ${({ $visible }) =>
+    ${({ $animated, $visible }) =>
+        $animated &&
         $visible &&
         css`
             ${slideUpSoftAnimation};
@@ -139,16 +147,25 @@ const IconWrapper = styled.div`
 
 /* ------------------------------- COMPONENT ------------------------------- */
 
-const DelegateBlock = () => {
+interface Props {
+    disableAnimation?: boolean;
+}
+
+const DelegateBlock = ({ disableAnimation = false }: Props) => {
     const { ref, visible } = useScrollAnimation(0.25, true);
+    const animated = !disableAnimation;
 
     return (
-        <Container ref={ref as React.RefObject<HTMLDivElement>} $visible={visible}>
+        <Container
+            ref={ref as React.RefObject<HTMLDivElement>}
+            $animated={animated}
+            $visible={visible}
+        >
             <Wrapper>
-                <LogoWrapper $visible={visible}>
+                <LogoWrapper $animated={animated} $visible={visible}>
                     <LogoStyled src={Logo} />
                 </LogoWrapper>
-                <ContentWrapper $visible={visible}>
+                <ContentWrapper $animated={animated} $visible={visible}>
                     <Tooltip
                         content={<span>⚡ Live now</span>}
                         position={TOOLTIP_POSITION.right}

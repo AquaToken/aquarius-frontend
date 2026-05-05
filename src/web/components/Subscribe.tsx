@@ -15,17 +15,23 @@ import { Breakpoints, COLORS } from 'styles/style-constants';
 /*                                   Styles                                   */
 /* -------------------------------------------------------------------------- */
 
-const Wrapper = styled.div<{ $visible: boolean }>`
+type AnimationProps = {
+    $animated: boolean;
+    $visible: boolean;
+};
+
+const Wrapper = styled.div<AnimationProps>`
     display: flex;
     width: 100%;
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-end;
     margin-top: 3.2rem;
-    opacity: 0;
-    ${containerScrollAnimation};
+    opacity: ${({ $animated }) => ($animated ? 0 : 1)};
+    ${({ $animated }) => $animated && containerScrollAnimation};
 
-    ${({ $visible }) =>
+    ${({ $animated, $visible }) =>
+        $animated &&
         $visible &&
         css`
             ${slideUpSoftAnimation};
@@ -137,9 +143,14 @@ const encode = (data: { [key: string]: string }) =>
         .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(data[key]))
         .join('&');
 
-const Subscribe = (): React.ReactNode => {
+interface Props {
+    disableAnimation?: boolean;
+}
+
+const Subscribe = ({ disableAnimation = false }: Props): React.ReactNode => {
     const [email, setEmail] = useState('');
     const { ref, visible } = useScrollAnimation(0.25, true);
+    const animated = !disableAnimation;
 
     const handleSubmit = (e: React.SyntheticEvent<FormEvent>) => {
         e.preventDefault();
@@ -160,7 +171,11 @@ const Subscribe = (): React.ReactNode => {
     );
 
     return (
-        <Wrapper ref={ref as React.RefObject<HTMLDivElement>} $visible={visible}>
+        <Wrapper
+            ref={ref as React.RefObject<HTMLDivElement>}
+            $animated={animated}
+            $visible={visible}
+        >
             <HeaderXS>{HeaderContent}</HeaderXS>
             <SubscribeBlock>
                 <Header>{HeaderContent}</Header>

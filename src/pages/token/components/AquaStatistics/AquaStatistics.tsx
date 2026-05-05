@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 import { getAquaCirculatingSupply } from 'api/cmc';
 import { getIceStatistics } from 'api/ice-locker';
@@ -12,8 +12,6 @@ import { getDateString } from 'helpers/date';
 import { formatBalance } from 'helpers/format-number';
 import { getPercentValue } from 'helpers/number';
 
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
-
 import { IceStatistics } from 'types/api-ice-locker';
 import { ExpertAssetData } from 'types/api-stellar-expert';
 
@@ -23,7 +21,6 @@ import Info from 'assets/icons/status/icon-info-16.svg';
 
 import Tooltip, { TOOLTIP_POSITION } from 'basics/Tooltip';
 
-import { containerScrollAnimation, slideUpSoftAnimation } from 'styles/animations';
 import { cardBoxShadow, commonMaxWidth, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS } from 'styles/style-constants';
 
@@ -34,11 +31,10 @@ import AquaPrice from 'pages/token/components/AquaPrice/AquaPrice';
 /*                                 Styled                                     */
 /* -------------------------------------------------------------------------- */
 
-const Container = styled.section<{ $visible: boolean }>`
+const Container = styled.section`
     ${commonMaxWidth};
     padding: 0 10rem;
     width: 100%;
-    ${containerScrollAnimation};
     background: ${COLORS.white};
     z-index: 100;
 
@@ -48,7 +44,7 @@ const Container = styled.section<{ $visible: boolean }>`
     `}
 `;
 
-const Content = styled.div<{ $visible: boolean }>`
+const Content = styled.div`
     border-radius: 4.4rem;
     padding: 3.6rem;
     ${cardBoxShadow};
@@ -56,7 +52,6 @@ const Content = styled.div<{ $visible: boolean }>`
     display: flex;
     flex-wrap: wrap;
     gap: 3.2rem;
-    ${({ $visible }) => $visible && slideUpSoftAnimation};
 
     ${respondDown(Breakpoints.sm)`
         flex-direction: column;
@@ -82,18 +77,11 @@ const AquaLinksStyled = styled(AquaLinks)`
     `}
 `;
 
-const Column = styled.div<{ $visible: boolean; $delay: number }>`
+const Column = styled.div`
     display: flex;
     flex-direction: column;
     gap: 0.8rem;
     margin-right: auto;
-    opacity: 0;
-    ${({ $visible, $delay }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: ${$delay}s;
-        `}
 
     ${respondDown(Breakpoints.sm)`
         flex-direction: row;
@@ -144,8 +132,6 @@ const AquaStatistics = () => {
 
     const { asset: aquaStellarAsset } = getEnvClassicAssetData('aqua');
 
-    const { ref, visible } = useScrollAnimation(0.3, true);
-
     useEffect(() => {
         getAssetDetails(aquaStellarAsset).then(setExpertData);
         getIceStatistics().then(setIceStats);
@@ -156,10 +142,10 @@ const AquaStatistics = () => {
     }, []);
 
     return (
-        <Container ref={ref as React.RefObject<HTMLDivElement>} $visible={visible}>
-            <Content $visible={visible}>
+        <Container>
+            <Content>
                 <AquaPriceStyled />
-                <Column $visible={visible} $delay={0}>
+                <Column>
                     <Label>First transaction:</Label>
                     <Value>
                         {expertData ? (
@@ -170,7 +156,7 @@ const AquaStatistics = () => {
                     </Value>
                 </Column>
 
-                <Column $visible={visible} $delay={0.1}>
+                <Column>
                     <Label>Payments volume:</Label>
                     <Value>
                         {expertData ? (
@@ -181,7 +167,7 @@ const AquaStatistics = () => {
                     </Value>
                 </Column>
 
-                <Column $visible={visible} $delay={0.2}>
+                <Column>
                     <Label>Traded volume:</Label>
                     <Value>
                         {expertData ? (
@@ -192,7 +178,7 @@ const AquaStatistics = () => {
                     </Value>
                 </Column>
 
-                <Column $visible={visible} $delay={0.3}>
+                <Column>
                     <Label>
                         Total frozen:
                         <Tooltip
@@ -223,7 +209,7 @@ const AquaStatistics = () => {
                     </Value>
                 </Column>
 
-                <Column $visible={visible} $delay={0.4}>
+                <Column>
                     <Label>
                         Daily rewards:
                         <Tooltip

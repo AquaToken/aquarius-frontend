@@ -4,12 +4,6 @@ import LockerMainImage from 'assets/locker/locker-main.svg';
 
 import CircleButton from 'basics/buttons/CircleButton';
 
-import {
-    fadeInScale,
-    fadeInUpAnimation,
-    fadeInUpDelayed,
-    containerScrollAnimation,
-} from 'styles/animations';
 import { commonMaxWidth, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS, FONT_SIZE } from 'styles/style-constants';
 
@@ -24,19 +18,12 @@ export const Container = styled.div`
     background-color: ${COLORS.gray50};
 `;
 
-/**
- * Main content block — contains text and image.
- * Uses containerScrollAnimation for fade/translateY on scroll.
- */
-export const Content = styled.div<{ $visible: boolean }>`
+export const Content = styled.div`
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     ${commonMaxWidth};
     padding: 0 4rem;
-
-    ${containerScrollAnimation}
-
     ${respondDown(Breakpoints.sm)`
     flex-direction: column;
     padding: 0 1.6rem;
@@ -44,16 +31,9 @@ export const Content = styled.div<{ $visible: boolean }>`
   `}
 `;
 
-/**
- * Locker image (right side).
- * Scales in with fade animation when visible.
- */
-export const Image = styled(LockerMainImage)<{ $visible: boolean }>`
+export const Image = styled(LockerMainImage)`
     max-height: 70vh;
     margin: auto -5% auto auto;
-    opacity: 0;
-
-    ${({ $visible }) => $visible && fadeInScale};
 
     ${respondDown(Breakpoints.lg)`
     max-height: 50rem;
@@ -68,7 +48,7 @@ export const Image = styled(LockerMainImage)<{ $visible: boolean }>`
 /**
  * Text content area (title + description + button).
  */
-export const TextContainer = styled.div<{ $visible: boolean }>`
+export const TextContainer = styled.div`
     display: flex;
     flex-direction: column;
     width: 50%;
@@ -77,8 +57,6 @@ export const TextContainer = styled.div<{ $visible: boolean }>`
     justify-content: center;
     padding: 5% 0;
     max-width: 45rem;
-
-    ${({ $visible }) => $visible && fadeInUpAnimation};
 
     ${respondDown(Breakpoints.md)`
     width: 100%;
@@ -90,14 +68,12 @@ export const TextContainer = styled.div<{ $visible: boolean }>`
 /**
  * Section title.
  */
-export const Title = styled.span<{ $visible: boolean }>`
+export const Title = styled.span`
     font-weight: bold;
     font-size: 5.6rem;
     line-height: 6.4rem;
     color: ${COLORS.textPrimary};
     margin-bottom: 1.6rem;
-
-    ${({ $visible }) => $visible && fadeInUpDelayed};
 
     ${respondDown(Breakpoints.md)`
     ${FONT_SIZE.xl};
@@ -107,11 +83,10 @@ export const Title = styled.span<{ $visible: boolean }>`
 /**
  * Section description text.
  */
-export const Description = styled.span<{ $visible: boolean }>`
+export const Description = styled.span`
     font-size: 1.6rem;
     line-height: 2.8rem;
     color: ${COLORS.textDark};
-    ${({ $visible }) => $visible && fadeInUpDelayed};
 `;
 
 /**
