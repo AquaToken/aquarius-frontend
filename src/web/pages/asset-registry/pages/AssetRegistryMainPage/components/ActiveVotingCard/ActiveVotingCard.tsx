@@ -213,7 +213,7 @@ const ActiveVotingCard = ({
     };
 
     const renderInfoTooltip = () => (
-        <Tooltip content="Data from Aquarius AMM." position={TOOLTIP_POSITION.top} showOnHover>
+        <Tooltip content="Data from Aquarius AMM" position={TOOLTIP_POSITION.top} showOnHover>
             <InfoIconWrap>
                 <IconInfo />
             </InfoIconWrap>
@@ -303,7 +303,7 @@ const ActiveVotingCard = ({
             {isActiveVoting && activeVoting ? (
                 <>
                     <Section>
-                        <MetaValue>Current results</MetaValue>
+                        <MetaValue>Current Results</MetaValue>
                         <CurrentResults
                             proposal={activeVoting}
                             withResultLabel={false}
@@ -312,7 +312,7 @@ const ActiveVotingCard = ({
                     </Section>
 
                     <Section>
-                        <MetaValue>Your vote</MetaValue>
+                        <MetaValue>Your Vote</MetaValue>
                         <VotingButtonsRow>
                             <ForButton
                                 fullWidth
