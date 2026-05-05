@@ -1,5 +1,7 @@
 import styled from 'styled-components';
 
+import ActiveVotingCard from 'web/pages/asset-registry/pages/AssetRegistryMainPage/components/ActiveVotingCard/ActiveVotingCard';
+
 import { commonMaxWidth, flexColumn, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS, FONT_SIZE } from 'styles/style-constants';
 
@@ -9,16 +11,27 @@ export const Main = styled.div`
     width: 100%;
     ${commonMaxWidth};
     padding: 4rem 4rem 9.6rem;
+    display: grid;
+    grid-template-columns: minmax(0, 100rem) 36.6rem;
+    justify-content: space-between;
+    align-items: start;
+    column-gap: 3.2rem;
 
     ${respondDown(Breakpoints.md)`
+        display: block;
         padding: 2.4rem 1.6rem 6.4rem;
     `}
+`;
+
+export const MainColumn = styled.div`
+    ${flexColumn};
+    gap: 3.2rem;
+    min-width: 0;
 `;
 
 export const Header = styled.div`
     ${flexColumn};
     gap: 2.4rem;
-    max-width: 78rem;
 `;
 
 export const ProposalId = styled.div`
@@ -39,7 +52,6 @@ export const ProposalTitle = styled.h1`
 `;
 
 export const AssetInfoSection = styled.section`
-    max-width: 78rem;
     padding: 3.2rem;
     background: ${COLORS.white};
     border-radius: 3.2rem;
@@ -51,18 +63,14 @@ export const AssetInfoSection = styled.section`
 `;
 
 export const Content = styled.div`
-    margin-top: 3.2rem;
+    ${flexColumn};
+    gap: 3.2rem;
 `;
 
 export const SectionCard = styled.section`
-    max-width: 78rem;
     padding: 3.2rem;
     background: ${COLORS.white};
     border-radius: 3.2rem;
-
-    &:not(:first-child) {
-        margin-top: 3.2rem;
-    }
 
     ${respondDown(Breakpoints.md)`
         padding: 2.4rem;
@@ -89,9 +97,8 @@ export const ProposalText = styled.div`
 `;
 
 export const AssetFields = styled.div`
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2.4rem 3.2rem;
+    ${flexColumn};
+    gap: 3.2rem;
     margin-top: 3.2rem;
 
     ${respondDown(Breakpoints.md)`
@@ -131,20 +138,49 @@ export const Divider = styled.div`
     background: ${COLORS.gray100};
 `;
 
-export const SidebarWeb = styled(Sidebar)`
+export const SidebarColumn = styled.aside`
+    position: sticky;
     top: 4rem;
-    margin: -52rem 0 0;
-    z-index: 2;
+    align-self: start;
+    margin-top: 7.2rem;
 
     ${respondDown(Breakpoints.md)`
         display: none;
     `}
 `;
 
+export const SidebarWeb = styled(Sidebar)`
+    position: relative;
+    top: unset;
+    right: unset;
+    margin: 0;
+    float: none;
+    width: 100%;
+`;
+
 export const SidebarMobile = styled(Sidebar)`
     display: none;
+    position: relative;
+    top: unset;
+    right: unset;
+    margin: 0;
+    float: none;
+    width: 100%;
 
     ${respondDown(Breakpoints.md)`
         display: block;
+    `}
+`;
+
+export const ActiveVotingSidebarWeb = styled(ActiveVotingCard)`
+    width: 100%;
+`;
+
+export const ActiveVotingSidebarMobile = styled(ActiveVotingCard)`
+    display: none;
+
+    ${respondDown(Breakpoints.md)`
+        display: flex;
+        width: 100%;
     `}
 `;

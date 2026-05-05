@@ -26,6 +26,8 @@ import CurrentResults from 'pages/governance/components/GovernanceVoteProposalPa
 import Votes from 'pages/governance/components/GovernanceVoteProposalPage/Votes/Votes';
 
 import {
+    ActiveVotingSidebarMobile,
+    ActiveVotingSidebarWeb,
     AssetField,
     AssetFieldLabel,
     AssetFields,
@@ -35,10 +37,12 @@ import {
     Divider,
     Header,
     Main,
+    MainColumn,
     ProposalText,
     ResultsBlock,
     SectionCard,
     SectionTitle,
+    SidebarColumn,
     SidebarMobile,
     SidebarWeb,
 } from './AssetRegistryVotingPage.styled';
@@ -47,11 +51,11 @@ import { AssetRegistryBadgeVariant } from '../AssetRegistryMainPage/AssetRegistr
 import AssetRegistryStatusBadge from '../AssetRegistryMainPage/components/AssetRegistryStatusBadge/AssetRegistryStatusBadge';
 
 const assetProposalFields: Array<{ key: keyof Proposal; label: string }> = [
-    { key: 'asset_aquarius_traction', label: 'Aquarius traction' },
+    // { key: 'asset_aquarius_traction', label: 'Aquarius traction' },
     { key: 'asset_audit_info', label: 'Audit info' },
     { key: 'asset_community_references', label: 'Community references' },
     // { key: 'asset_holder_distribution', label: 'Holder distribution' },
-    { key: 'asset_issuer_commitments', label: 'Issuer commitments' },
+    // { key: 'asset_issuer_commitments', label: 'Issuer commitments' },
     // { key: 'asset_issuer_information', label: 'Issuer information' },
     // { key: 'asset_liquidity', label: 'Liquidity' },
     { key: 'asset_related_projects', label: 'Related projects' },
@@ -135,50 +139,71 @@ const AssetRegistryVotingPage = (): ReactElement => {
         return <NotFoundPage />;
     }
 
+    const isVotingActive = proposal.proposal_status === 'VOTING';
+
     return (
         <PageContainer $color={COLORS.gray50}>
             <Main>
-                <Header>
-                    <CircleButton
-                        to={AppRoutes.section.assetRegistry.link.index}
-                        label="Assets registry list"
-                    >
-                        <ArrowLeft />
-                    </CircleButton>
-                    <AssetInfoSection>
-                        <AssetInfoContent asset={asset} badge={getAssetProposalBadge(proposal)} />
-                    </AssetInfoSection>
-                </Header>
+                <MainColumn>
+                    <Header>
+                        <CircleButton
+                            to={AppRoutes.section.assetRegistry.link.index}
+                            label="Assets registry list"
+                        >
+                            <ArrowLeft />
+                        </CircleButton>
+                        <AssetInfoSection>
+                            <AssetInfoContent
+                                asset={asset}
+                                badge={getAssetProposalBadge(proposal)}
+                            />
+                        </AssetInfoSection>
+                    </Header>
 
-                <SidebarWeb proposal={proposal} />
+                    <Content>
+                        {isVotingActive ? (
+                            <ActiveVotingSidebarMobile
+                                proposal={proposal}
+                                hideStats
+                                hideDetailsLink
+                            />
+                        ) : (
+                            <SidebarMobile proposal={proposal} />
+                        )}
 
-                <Content>
-                    <SidebarMobile proposal={proposal} />
-
-                    <SectionCard>
-                        <SectionTitle>Proposal</SectionTitle>
-                        <ProposalText dangerouslySetInnerHTML={{ __html: proposal.text }} />
-                        <AssetFields>
-                            {proposalAssetFields.map(field => (
-                                <AssetField key={field.label}>
-                                    <AssetFieldLabel>{field.label}</AssetFieldLabel>
-                                    <AssetFieldValue>{field.value || '—'}</AssetFieldValue>
-                                </AssetField>
-                            ))}
-                        </AssetFields>
-                    </SectionCard>
-
-                    {(proposal.proposal_status === 'VOTING' ||
-                        proposal.proposal_status === 'VOTED') && (
                         <SectionCard>
-                            <ResultsBlock>
-                                <CurrentResults proposal={proposal} />
-                                <Divider />
-                                <Votes />
-                            </ResultsBlock>
+                            <SectionTitle>Proposal</SectionTitle>
+                            <ProposalText dangerouslySetInnerHTML={{ __html: proposal.text }} />
+                            <AssetFields>
+                                {proposalAssetFields.map(field => (
+                                    <AssetField key={field.label}>
+                                        <AssetFieldLabel>{field.label}</AssetFieldLabel>
+                                        <AssetFieldValue>{field.value || '—'}</AssetFieldValue>
+                                    </AssetField>
+                                ))}
+                            </AssetFields>
                         </SectionCard>
+
+                        {(proposal.proposal_status === 'VOTING' ||
+                            proposal.proposal_status === 'VOTED') && (
+                            <SectionCard>
+                                <ResultsBlock>
+                                    <CurrentResults proposal={proposal} />
+                                    <Divider />
+                                    <Votes />
+                                </ResultsBlock>
+                            </SectionCard>
+                        )}
+                    </Content>
+                </MainColumn>
+
+                <SidebarColumn>
+                    {isVotingActive ? (
+                        <ActiveVotingSidebarWeb proposal={proposal} hideStats hideDetailsLink />
+                    ) : (
+                        <SidebarWeb proposal={proposal} />
                     )}
-                </Content>
+                </SidebarColumn>
             </Main>
         </PageContainer>
     );
