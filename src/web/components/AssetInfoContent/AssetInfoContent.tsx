@@ -407,18 +407,18 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
                         <Section>
                             <Details>
                                 <Detail>
-                                    <span>Asset holders:</span>
+                                    <span>Asset Holders:</span>
                                     <span>{formatBalance(expertData.trustlines[0])}</span>
                                 </Detail>
                                 {!asset.isNative() && (
                                     <Detail>
-                                        <span>First transaction:</span>
+                                        <span>First Transaction:</span>
                                         <span>{getDateString(expertData.created * 1000)}</span>
                                     </Detail>
                                 )}
 
                                 <Detail>
-                                    <span>Current price:</span>
+                                    <span>Current Price:</span>
                                     <span>
                                         $
                                         {formatBalance(
@@ -430,15 +430,15 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
                                     </span>
                                 </Detail>
                                 <Detail>
-                                    <span>24h change:</span>
+                                    <span>24H Change:</span>
                                     <Changes24 expertData={expertData} />
                                 </Detail>
                                 <Detail>
-                                    <span>Authorization flags:</span>
+                                    <span>Authorization Flags:</span>
                                     <span>{authorizationFlags || 'None'}</span>
                                 </Detail>
                                 <Detail>
-                                    <span>Supply status:</span>
+                                    <span>Supply Status:</span>
                                     <span>
                                         {assetInfo.is_supply_locked ? 'Locked' : 'Unlocked'}
                                     </span>
@@ -453,7 +453,7 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
                                 )}
                                 {!asset.isNative() && asset.contract && (
                                     <Detail>
-                                        <span>Contract address:</span>
+                                        <span>Contract Address:</span>
                                         <CopyButtonStyled text={asset.contract}>
                                             <PublicKeyWithIcon pubKey={asset.contract} />
                                         </CopyButtonStyled>
@@ -464,7 +464,7 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
                         </Section>
 
                         <Section>
-                            <SectionTitle>Aquarius AMM</SectionTitle>
+                            <SectionTitle>Asset Stats on Aquarius</SectionTitle>
                             <Details>
                                 <Detail>
                                     <span>
@@ -474,14 +474,14 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
                                 </Detail>
                                 <Detail>
                                     <span>
-                                        <InfoLabelWrap>Overall volume</InfoLabelWrap>
+                                        <InfoLabelWrap>Total Volume</InfoLabelWrap>
                                     </span>
                                     <span>{getUsdAmountView(tokenStats?.total_volume_usd)}</span>
                                 </Detail>
                                 <Detail>
                                     <span>
                                         <InfoLabelWrap>
-                                            Avg. daily volume
+                                            Daily Avg. Volume
                                             {renderCountTooltip('30-day average')}
                                         </InfoLabelWrap>
                                     </span>
@@ -503,7 +503,7 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
                                         <Detail>
                                             <span>
                                                 <InfoLabelWrap>
-                                                    Current AQUA rewards
+                                                    Current AQUA Rewards
                                                     {renderCountTooltip(
                                                         `Paid in ${getCountLabel(
                                                             aquaRewardsPoolsCount,
@@ -520,7 +520,7 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
                                         <Detail>
                                             <span>
                                                 <InfoLabelWrap>
-                                                    Current incentives
+                                                    Current Incentives
                                                     {renderCountTooltip(
                                                         `Paid in ${getCountLabel(
                                                             incentivesPoolsCount,
@@ -537,7 +537,7 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
                                         <Detail>
                                             <span>
                                                 <InfoLabelWrap>
-                                                    Current bribes
+                                                    Current Bribes
                                                     {renderCountTooltip(
                                                         `Paid in ${getCountLabel(
                                                             bribesMarketsCount,
