@@ -5,6 +5,8 @@ import styled from 'styled-components';
 import { getRegistryAssetMarketStatsRequest } from 'api/asset-registry';
 import { getAssetDetails } from 'api/stellar-expert';
 
+import { AppRoutes } from 'constants/routes';
+
 import { getAssetString } from 'helpers/assets';
 import { getDateString } from 'helpers/date';
 import getExplorerLink, { ExplorerSection } from 'helpers/explorer-links';
@@ -28,12 +30,10 @@ import Mail from 'assets/community/email16.svg';
 import Git from 'assets/community/github16.svg';
 import X from 'assets/community/twitter16.svg';
 import External from 'assets/icons/nav/icon-external-link-16.svg';
-import IconInfo from 'assets/icons/status/icon-info-16.svg';
 
 import Asset from 'basics/Asset';
 import DotsLoader from 'basics/loaders/DotsLoader';
 import PageLoader from 'basics/loaders/PageLoader';
-import Tooltip, { TOOLTIP_POSITION } from 'basics/Tooltip';
 
 import Changes24 from 'components/Changes24';
 import PublicKeyWithIcon from 'components/PublicKeyWithIcon';
@@ -45,9 +45,11 @@ import {
     Description,
     Detail,
     Details,
-    InfoIconWrap,
     InfoLabelWrap,
     Links,
+    PoolsLink,
+    Section,
+    SectionTitle,
     TopRow,
 } from './AssetInfoContent.styled';
 
@@ -176,13 +178,13 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
         return `$${formatBalance(value, true, true)}`;
     };
 
-    const renderInfoTooltip = () => (
-        <Tooltip content="Data from Aquarius AMM." position={TOOLTIP_POSITION.top} showOnHover>
-            <InfoIconWrap>
-                <IconInfo />
-            </InfoIconWrap>
-        </Tooltip>
-    );
+    const getPoolsCountView = () => {
+        if (isMarketStatsLoading) {
+            return <DotsLoader />;
+        }
+
+        return currentMarketStats?.poolsCount ?? 0;
+    };
 
     return (
         <>
@@ -225,88 +227,90 @@ const AssetInfoContent = ({ asset, badge }: AssetInfoContentProps): React.ReactN
             </Links>
             {expertData !== undefined ? (
                 expertData ? (
-                    <Details>
-                        <Detail>
-                            <span>Asset holders:</span>
-                            <span>{formatBalance(expertData.trustlines[0])}</span>
-                        </Detail>
-                        {!asset.isNative() && (
-                            <Detail>
-                                <span>First transaction:</span>
-                                <span>{getDateString(expertData.created * 1000)}</span>
-                            </Detail>
-                        )}
-                        <Detail>
-                            <span>
-                                <InfoLabelWrap>
-                                    TVL
-                                    {renderInfoTooltip()}
-                                </InfoLabelWrap>
-                            </span>
-                            <span>{getUsdAmountView(currentMarketStats?.tvlUsd)}</span>
-                        </Detail>
-                        <Detail>
-                            <span>
-                                <InfoLabelWrap>
-                                    Volume 24H
-                                    {renderInfoTooltip()}
-                                </InfoLabelWrap>
-                            </span>
-                            <span>{getUsdAmountView(currentMarketStats?.volumeUsd)}</span>
-                        </Detail>
-                        <Detail>
-                            <span>Overall payments volume:</span>
-                            <span>
-                                {formatBalance(expertData.payments_amount / 1e7, true, true)}{' '}
-                                {asset.code}
-                            </span>
-                        </Detail>
-                        <Detail>
-                            <span>Overall trading volume:</span>
-                            <span>
-                                {formatBalance(expertData.traded_amount / 1e7, true, true)}{' '}
-                                {asset.code}
-                            </span>
-                        </Detail>
-                        <Detail>
-                            <span>Current price:</span>
-                            <span>
-                                $
-                                {formatBalance(
-                                    expertData.price7d?.[expertData.price7d.length - 1]?.[1] ?? 0,
-                                    true,
+                    <>
+                        <Section>
+                            <Details>
+                                <Detail>
+                                    <span>Asset holders:</span>
+                                    <span>{formatBalance(expertData.trustlines[0])}</span>
+                                </Detail>
+                                {!asset.isNative() && (
+                                    <Detail>
+                                        <span>First transaction:</span>
+                                        <span>{getDateString(expertData.created * 1000)}</span>
+                                    </Detail>
                                 )}
-                            </span>
-                        </Detail>
-                        <Detail>
-                            <span>24h change:</span>
-                            <Changes24 expertData={expertData} />
-                        </Detail>
-                        {!asset.isNative() && asset.issuer && (
-                            <Detail>
-                                <span>Issuer:</span>
-                                <CopyButtonStyled text={asset.issuer}>
-                                    <PublicKeyWithIcon pubKey={asset.issuer} />
-                                </CopyButtonStyled>
-                            </Detail>
-                        )}
-                        {!asset.isNative() && asset.contract && (
-                            <Detail>
-                                <span>Contract address:</span>
-                                <CopyButtonStyled text={asset.contract}>
-                                    <PublicKeyWithIcon pubKey={asset.contract} />
-                                </CopyButtonStyled>
-                            </Detail>
-                        )}
-                        <Detail>
-                            <span>Authorization flags:</span>
-                            <span>{authorizationFlags || 'None'}</span>
-                        </Detail>
-                        <Detail>
-                            <span>Supply status:</span>
-                            <span>{assetInfo.is_supply_locked ? 'Locked' : 'Unlocked'}</span>
-                        </Detail>
-                    </Details>
+
+                                <Detail>
+                                    <span>Current price:</span>
+                                    <span>
+                                        $
+                                        {formatBalance(
+                                            expertData.price7d?.[
+                                                expertData.price7d.length - 1
+                                            ]?.[1] ?? 0,
+                                            true,
+                                        )}
+                                    </span>
+                                </Detail>
+                                <Detail>
+                                    <span>24h change:</span>
+                                    <Changes24 expertData={expertData} />
+                                </Detail>
+                                <Detail>
+                                    <span>Authorization flags:</span>
+                                    <span>{authorizationFlags || 'None'}</span>
+                                </Detail>
+                                <Detail>
+                                    <span>Supply status:</span>
+                                    <span>
+                                        {assetInfo.is_supply_locked ? 'Locked' : 'Unlocked'}
+                                    </span>
+                                </Detail>
+                                {!asset.isNative() && asset.issuer && (
+                                    <Detail>
+                                        <span>Issuer:</span>
+                                        <CopyButtonStyled text={asset.issuer}>
+                                            <PublicKeyWithIcon pubKey={asset.issuer} />
+                                        </CopyButtonStyled>
+                                    </Detail>
+                                )}
+                                {!asset.isNative() && asset.contract && (
+                                    <Detail>
+                                        <span>Contract address:</span>
+                                        <CopyButtonStyled text={asset.contract}>
+                                            <PublicKeyWithIcon pubKey={asset.contract} />
+                                        </CopyButtonStyled>
+                                    </Detail>
+                                )}
+                                <Detail />
+                            </Details>
+                        </Section>
+
+                        <Section>
+                            <SectionTitle>Aquarius AMM</SectionTitle>
+                            <Details>
+                                <Detail>
+                                    <span>
+                                        <InfoLabelWrap>TVL</InfoLabelWrap>
+                                    </span>
+                                    <span>{getUsdAmountView(currentMarketStats?.tvlUsd)}</span>
+                                </Detail>
+                                <Detail>
+                                    <span>
+                                        <InfoLabelWrap>Volume 24H</InfoLabelWrap>
+                                    </span>
+                                    <span>{getUsdAmountView(currentMarketStats?.volumeUsd)}</span>
+                                </Detail>
+                                <Detail />
+                            </Details>
+                            <PoolsLink
+                                to={`${AppRoutes.section.amm.link.index}?search=${asset.contract}`}
+                            >
+                                {getPoolsCountView()} pools with {asset.code}
+                            </PoolsLink>
+                        </Section>
+                    </>
                 ) : null
             ) : (
                 <PageLoader />

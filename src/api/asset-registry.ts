@@ -123,11 +123,13 @@ export const getRegistryAssetMarketStatsRequest =
 
                 if (!acc[tokenAddress]) {
                     acc[tokenAddress] = {
+                        poolsCount: 0,
                         tvlUsd: 0,
                         volumeUsd: 0,
                     };
                 }
 
+                acc[tokenAddress].poolsCount += 1;
                 acc[tokenAddress].tvlUsd +=
                     (reserve / STELLAR_DECIMALS) * tokenPriceInXlm * lumenUsdPrice;
                 acc[tokenAddress].volumeUsd += Number(pool.volume_usd) / STELLAR_DECIMALS;

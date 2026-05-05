@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 
 import CopyButton from 'basics/buttons/CopyButton';
+import { ExternalLink } from 'basics/links';
 
 import { flexAllCenter, flexRowSpaceBetween, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS } from 'styles/style-constants';
@@ -33,6 +34,17 @@ export const Links = styled.div`
     `}
 `;
 
+export const Section = styled.section`
+    margin-top: 4rem;
+`;
+
+export const SectionTitle = styled.h3`
+    margin: 0 0 1rem;
+    font-size: 2rem;
+    line-height: 2.8rem;
+    color: ${COLORS.textPrimary};
+`;
+
 export const ContactLink = styled.a`
     display: flex;
     align-items: center;
@@ -50,7 +62,7 @@ export const ContactLink = styled.a`
 export const Details = styled.div`
     display: flex;
     flex-wrap: wrap;
-    margin-top: 4rem;
+    margin-top: 2rem;
     gap: 3.2rem;
 
     ${respondDown(Breakpoints.sm)`
@@ -91,4 +103,13 @@ export const InfoIconWrap = styled.span`
 
 export const CopyButtonStyled = styled(CopyButton)`
     font-size: 1.4rem;
+`;
+
+export const PoolsLink = styled(ExternalLink)`
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 2.4rem;
+    color: ${COLORS.purple500};
+    text-decoration: none;
 `;

@@ -70,6 +70,7 @@ export type RegistryAssetsResponse = {
 export type RegistryAssetMarketStats = {
     tvlUsd: number;
     volumeUsd: number;
+    poolsCount: number;
 };
 
 export type RegistryAssetMarketStatsMap = Record<string, RegistryAssetMarketStats>;
