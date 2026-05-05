@@ -11,6 +11,7 @@ import {
 
 import { getEnvClassicAssetData } from 'helpers/assets';
 import { convertLocalDateToUTCIgnoringTimezone, getDateString } from 'helpers/date';
+import { createAsset } from 'helpers/token';
 
 import useAuthStore from 'store/authStore/useAuthStore';
 
@@ -29,6 +30,7 @@ import { COLORS } from 'styles/style-constants';
 
 import {
     FilterGroup,
+    FilterSelect,
     MainSection,
     SearchInputWrap,
     Title,
@@ -290,7 +292,25 @@ const AssetRegistryMainPage = () => {
 
         setIsMarketStatsLoading(true);
 
-        getRegistryAssetMarketStatsRequest()
+        const allAssetsContracts = [
+            ...DEFAULT_REGISTRY_ASSETS,
+            ...apiRegistryAssets,
+            ...upcomingVotes.map(vote => ({
+                asset_code: vote.assetCode,
+                asset_issuer: vote.assetIssuer,
+                asset_contract_address: null,
+                whitelisted: false,
+                proposals: [],
+            })),
+        ]
+            .filter(asset => asset.asset_code)
+            .map(
+                asset =>
+                    asset.asset_contract_address ??
+                    createAsset(asset.asset_code as string, asset.asset_issuer ?? '').contract,
+            );
+
+        getRegistryAssetMarketStatsRequest(allAssetsContracts)
             .then(data => {
                 if (!isCancelled) {
                     setMarketStats(data);
@@ -310,7 +330,7 @@ const AssetRegistryMainPage = () => {
         return () => {
             isCancelled = true;
         };
-    }, []);
+    }, [apiRegistryAssets, upcomingVotes]);
 
     const upcomingVotes = useMemo<UpcomingVoteData[]>(
         () => (apiUpcomingVotes.length ? apiUpcomingVotes : MOCK_UPCOMING_VOTES),
@@ -383,6 +403,12 @@ const AssetRegistryMainPage = () => {
                     toolbar={
                         <Toolbar>
                             <FilterGroup
+                                value={filter}
+                                options={FILTER_OPTIONS}
+                                onChange={onFilterChange}
+                            />
+
+                            <FilterSelect
                                 value={filter}
                                 options={FILTER_OPTIONS}
                                 onChange={onFilterChange}

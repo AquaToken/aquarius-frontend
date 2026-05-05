@@ -68,9 +68,9 @@ export type RegistryAssetsResponse = {
 };
 
 export type RegistryAssetMarketStats = {
-    tvlUsd: number;
-    volumeUsd: number;
-    poolsCount: number;
+    tvlUsd: string;
+    totalVolumeUsd: string;
+    dailyAverageVolumeUsd: string;
 };
 
 export type RegistryAssetMarketStatsMap = Record<string, RegistryAssetMarketStats>;

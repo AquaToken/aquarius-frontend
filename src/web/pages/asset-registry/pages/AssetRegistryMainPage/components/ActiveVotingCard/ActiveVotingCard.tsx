@@ -8,12 +8,9 @@ import { VoteOptions } from 'constants/dao';
 import { DAY } from 'constants/intervals';
 import { AppRoutes } from 'constants/routes';
 
+import { contractValueToFormattedAmount } from 'helpers/amount';
 import { getAssetString } from 'helpers/assets';
-import {
-    convertLocalDateToUTCIgnoringTimezone,
-    convertUTCToLocalDateIgnoringTimezone,
-    getDateString,
-} from 'helpers/date';
+import { convertLocalDateToUTCIgnoringTimezone, getDateString } from 'helpers/date';
 import { formatBalance } from 'helpers/format-number';
 import { createAsset } from 'helpers/token';
 
@@ -206,11 +203,11 @@ const ActiveVotingCard = ({
         }
     }, [isLogged, selectedOption]);
 
-    const assetHolders = useMemo(() => {
-        if (!asset) {
-            return '—';
-        }
+    if (!assetCode || !asset) {
+        return null;
+    }
 
+    const assetHolders = useMemo(() => {
         if (asset.isNative()) {
             return lumenHolders === null ? <DotsLoader /> : formatBalance(lumenHolders);
         }
@@ -220,16 +217,12 @@ const ActiveVotingCard = ({
         return holders === undefined ? '—' : formatBalance(holders);
     }, [asset, assetsInfo, lumenHolders]);
 
-    if (!assetCode || !asset) {
-        return null;
-    }
-
     const currentMarketStats = marketStats[assetContract ?? asset.contract];
     const endsAt = isActiveVoting && activeVoting ? activeVoting.end_at : null;
     const nextVotingStartsAt =
         !isActiveVoting && nextVoting ? nextVoting.startsAt.replace(/^Starts\s+/i, '') : null;
 
-    const getUsdAmountView = (value?: number) => {
+    const getUsdAmountView = (value?: string) => {
         if (isMarketStatsLoading) {
             return <DotsLoader />;
         }
@@ -238,11 +231,11 @@ const ActiveVotingCard = ({
             return '—';
         }
 
-        return `$${formatBalance(value, true, true)}`;
+        return `$${contractValueToFormattedAmount(value, 7, true, true)}`;
     };
 
     const renderInfoTooltip = () => (
-        <Tooltip content="Data from Aquarius AMM" position={TOOLTIP_POSITION.top} showOnHover>
+        <Tooltip content="30-day average" position={TOOLTIP_POSITION.top} showOnHover>
             <InfoIconWrap>
                 <IconInfo />
             </InfoIconWrap>
@@ -306,22 +299,25 @@ const ActiveVotingCard = ({
                             <MetaValue>{assetHolders}</MetaValue>
                         </Meta>
                         <Meta>
-                            <MetaLabel>
-                                <InfoLabelWrap>
-                                    TVL
-                                    {renderInfoTooltip()}
-                                </InfoLabelWrap>
-                            </MetaLabel>
+                            <MetaLabel>TVL</MetaLabel>
                             <MetaValue>{getUsdAmountView(currentMarketStats?.tvlUsd)}</MetaValue>
+                        </Meta>
+                        <Meta>
+                            <MetaLabel>Total Volume</MetaLabel>
+                            <MetaValue>
+                                {getUsdAmountView(currentMarketStats?.totalVolumeUsd)}
+                            </MetaValue>
                         </Meta>
                         <Meta>
                             <MetaLabel>
                                 <InfoLabelWrap>
-                                    Volume 24H
+                                    Daily Avg. Volume
                                     {renderInfoTooltip()}
                                 </InfoLabelWrap>
                             </MetaLabel>
-                            <MetaValue>{getUsdAmountView(currentMarketStats?.volumeUsd)}</MetaValue>
+                            <MetaValue>
+                                {getUsdAmountView(currentMarketStats?.dailyAverageVolumeUsd)}
+                            </MetaValue>
                         </Meta>
                     </Stats>
 
