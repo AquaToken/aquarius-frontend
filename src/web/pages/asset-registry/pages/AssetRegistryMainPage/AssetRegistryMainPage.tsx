@@ -141,7 +141,7 @@ const MOCK_UPCOMING_VOTES: UpcomingVoteData[] = MOCK_UPCOMING_VOTES_ASSETS.map(
 const AssetRegistryMainPage = () => {
     const [filter, setFilter] = useState(AssetRegistryFilter.all);
     const [search, setSearch] = useState('');
-    const [apiRegistryAssets, setApiRegistryAssets] = useState<RegistryAsset[]>([]);
+    const [apiRegistryAssets, setApiRegistryAssets] = useState<RegistryAsset[]>(null);
     const [apiUpcomingVotes, setApiUpcomingVotes] = useState<UpcomingVoteData[]>([]);
     const [myVoteProposals, setMyVoteProposals] = useState<RegistryProposalPreview[]>([]);
     const [historyVoteProposals, setHistoryVoteProposals] = useState<RegistryProposalPreview[]>([]);
@@ -288,20 +288,20 @@ const AssetRegistryMainPage = () => {
     }, []);
 
     useEffect(() => {
+        if (!apiRegistryAssets) return;
+
         let isCancelled = false;
 
         setIsMarketStatsLoading(true);
 
         const allAssetsContracts = [
             ...DEFAULT_REGISTRY_ASSETS,
-            ...apiRegistryAssets,
-            ...upcomingVotes.map(vote => ({
-                asset_code: vote.assetCode,
-                asset_issuer: vote.assetIssuer,
-                asset_contract_address: null,
-                whitelisted: false,
-                proposals: [],
-            })),
+            ...apiRegistryAssets.filter(({ proposals }) =>
+                proposals.some(
+                    ({ proposal_status }) =>
+                        proposal_status === 'VOTED' || proposal_status === 'VOTING',
+                ),
+            ),
         ]
             .filter(asset => asset.asset_code)
             .map(
@@ -330,7 +330,7 @@ const AssetRegistryMainPage = () => {
         return () => {
             isCancelled = true;
         };
-    }, [apiRegistryAssets, upcomingVotes]);
+    }, [apiRegistryAssets]);
 
     const upcomingVotes = useMemo<UpcomingVoteData[]>(
         () => (apiUpcomingVotes.length ? apiUpcomingVotes : MOCK_UPCOMING_VOTES),
@@ -339,11 +339,12 @@ const AssetRegistryMainPage = () => {
 
     const items = useMemo(() => {
         const defaultIds = new Set(DEFAULT_REGISTRY_ASSETS.map(getRegistryAssetId));
-        const uniqueApiRegistryAssets = apiRegistryAssets.filter(
-            asset =>
-                !defaultIds.has(getRegistryAssetId(asset)) &&
-                asset.proposals.some(proposal => proposal.proposal_status === 'VOTED'),
-        );
+        const uniqueApiRegistryAssets =
+            apiRegistryAssets?.filter(
+                asset =>
+                    !defaultIds.has(getRegistryAssetId(asset)) &&
+                    asset.proposals.some(proposal => proposal.proposal_status === 'VOTED'),
+            ) ?? [];
 
         return [...DEFAULT_REGISTRY_ASSETS, ...uniqueApiRegistryAssets];
     }, [apiRegistryAssets]);
