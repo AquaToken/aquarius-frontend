@@ -1,19 +1,14 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 import Freighter from 'assets/wallets/freighter/freighter-dark.svg';
 import HotWallet from 'assets/wallets/hot-wallet.svg';
 
-import {
-    containerScrollAnimation,
-    fadeAppearAnimation,
-    slideUpSoftAnimation,
-} from 'styles/animations';
 import { respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS } from 'styles/style-constants';
 
 /* --------------------------- Wrapper + Layout --------------------------- */
 
-export const Wrapper = styled.section<{ $visible: boolean }>`
+export const Wrapper = styled.section`
     display: flex;
     width: 100%;
     justify-content: center;
@@ -21,28 +16,19 @@ export const Wrapper = styled.section<{ $visible: boolean }>`
     position: relative;
     margin-top: 8rem;
     gap: 2.4rem;
-
-    ${containerScrollAnimation};
-
     ${respondDown(Breakpoints.md)`
     margin-top: 3.2rem;
     flex-direction: column;
   `}
 `;
 
-export const Title = styled.span<{ $visible: boolean }>`
+export const Title = styled.span`
     font-size: 1.6rem;
     color: ${COLORS.gray200};
     display: none;
 
     ${respondDown(Breakpoints.md)`
     display: block;
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${fadeAppearAnimation};
-            animation-delay: 0.1s;
-        `}
   `}
 `;
 
@@ -68,20 +54,12 @@ export const ImageBlock = styled.div`
   `}
 `;
 
-/* --------------------------- Animated Icons --------------------------- */
+/* --------------------------- Icons --------------------------- */
 
-export const IconWrapper = styled.a<{ $visible: boolean; $delay: number }>`
+export const IconWrapper = styled.a`
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    opacity: 0;
-
-    ${({ $visible, $delay }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: ${$delay}s;
-        `}
 `;
 
 export const FreighterIcon = styled(Freighter)`

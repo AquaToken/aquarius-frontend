@@ -1,6 +1,5 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
-import { slideUpSoftAnimation, containerScrollAnimation } from 'styles/animations';
 import { flexColumn, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS, FONT_SIZE } from 'styles/style-constants';
 
@@ -8,19 +7,12 @@ import { Breakpoints, COLORS, FONT_SIZE } from 'styles/style-constants';
 /*                                  Layout                                    */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Wrapper for the WhyFreezeAQUA section.
- * Uses containerScrollAnimation for smooth fade/slide on scroll.
- */
-export const Container = styled.div<{ $visible: boolean }>`
+export const Container = styled.div`
     display: flex;
     flex-direction: column;
     padding: 0 4rem;
     margin-top: 6rem;
     margin-bottom: 6rem;
-
-    ${containerScrollAnimation}
-
     ${respondDown(Breakpoints.md)`
     padding: 4rem 1.6rem 0;
     margin-top: 0;
@@ -28,22 +20,11 @@ export const Container = styled.div<{ $visible: boolean }>`
   `}
 `;
 
-/**
- * Section title with soft slide-up animation.
- */
-export const Title = styled.span<{ $visible: boolean }>`
+export const Title = styled.span`
     font-size: 3.5rem;
     line-height: 4.1rem;
     color: ${COLORS.purple950};
     margin-bottom: 7rem;
-    opacity: 0;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: 0.1s;
-        `}
 
     ${respondDown(Breakpoints.md)`
     ${FONT_SIZE.xl};
@@ -64,21 +45,9 @@ export const Content = styled.div`
   `}
 `;
 
-/**
- * Each feature column (image + text).
- * Animates upward sequentially with delay.
- */
-export const Column = styled.div<{ $visible: boolean; $delay: number }>`
+export const Column = styled.div`
     ${flexColumn};
     width: 100%;
-    opacity: 0;
-
-    ${({ $visible, $delay }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: ${$delay}s;
-        `}
 
     svg {
         min-height: 13.8rem;

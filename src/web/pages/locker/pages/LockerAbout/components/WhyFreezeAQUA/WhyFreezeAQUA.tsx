@@ -1,7 +1,5 @@
 import * as React from 'react';
 
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
-
 import Image1 from 'assets/locker/why-freeze-aqua-1.svg';
 import Image2 from 'assets/locker/why-freeze-aqua-2.svg';
 import Image3 from 'assets/locker/why-freeze-aqua-3.svg';
@@ -17,14 +15,12 @@ import {
 } from './WhyFreezeAQUA.styled';
 
 const WhyFreezeAQUA: React.FC = () => {
-    const { ref, visible } = useScrollAnimation(0.2, true);
-
     return (
-        <Container ref={ref as React.RefObject<HTMLDivElement>} $visible={visible}>
-            <Title $visible={visible}>Why freeze AQUA?</Title>
+        <Container>
+            <Title>Why freeze AQUA?</Title>
 
             <Content>
-                <Column $visible={visible} $delay={0}>
+                <Column>
                     <Image1 />
                     <TextWrap>
                         <ColumnTitle>Boosted Liquidity Rewards</ColumnTitle>
@@ -37,7 +33,7 @@ const WhyFreezeAQUA: React.FC = () => {
                     </TextWrap>
                 </Column>
 
-                <Column $visible={visible} $delay={0.15}>
+                <Column>
                     <Image3 />
                     <TextWrap>
                         <ColumnTitle>Unlock voting</ColumnTitle>
@@ -48,7 +44,7 @@ const WhyFreezeAQUA: React.FC = () => {
                     </TextWrap>
                 </Column>
 
-                <Column $visible={visible} $delay={0.3}>
+                <Column>
                     <Image2 />
                     <TextWrap>
                         <ColumnTitle>Earn for Voting</ColumnTitle>

@@ -1,7 +1,5 @@
 import * as React from 'react';
 
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
-
 import HowItWorksIcon from 'assets/main-page/how-it-works.svg';
 
 import {
@@ -17,21 +15,19 @@ import {
 } from './HowItWorks.styled';
 
 const HowItWorks: React.FC = () => {
-    const { ref, visible } = useScrollAnimation(0.25, true);
-
     return (
-        <Wrapper ref={ref as React.RefObject<HTMLDivElement>} $visible={visible} id="how-it-works">
+        <Wrapper id="how-it-works">
             <BlocksWrapper>
-                <TitleBlock $visible={visible}>
-                    <Title $visible={visible}>How it works</Title>
+                <TitleBlock>
+                    <Title>How it works</Title>
                     <Description>
                         Aquarius incentives are designed to drive deep liquidity and sustainable
                         DeFi growth.
                     </Description>
                 </TitleBlock>
 
-                <BlockInteractive $visible={visible}>
-                    <InteractiveItem $visible={visible} $delay={0.1}>
+                <BlockInteractive>
+                    <InteractiveItem>
                         <InteractiveTitle>Traders</InteractiveTitle>
                         <Description>
                             Swap tokens seamlessly through Aquarius AMMs with low fees and fast
@@ -39,7 +35,7 @@ const HowItWorks: React.FC = () => {
                         </Description>
                     </InteractiveItem>
 
-                    <InteractiveItem $visible={visible} $delay={0.25}>
+                    <InteractiveItem>
                         <InteractiveTitle>Voters</InteractiveTitle>
                         <Description>
                             Lock AQUA into ICE to vote on pools and direct emissions. Earn AQUA
@@ -47,7 +43,7 @@ const HowItWorks: React.FC = () => {
                         </Description>
                     </InteractiveItem>
 
-                    <InteractiveItem $visible={visible} $delay={0.4}>
+                    <InteractiveItem>
                         <InteractiveTitle>Liquidity Providers</InteractiveTitle>
                         <Description>
                             Provide liquidity to AMM pools and earn AQUA rewards, trading fees, and
@@ -56,7 +52,7 @@ const HowItWorks: React.FC = () => {
                     </InteractiveItem>
                 </BlockInteractive>
 
-                <IconBlock $visible={visible}>
+                <IconBlock>
                     <HowItWorksIcon />
                 </IconBlock>
             </BlocksWrapper>

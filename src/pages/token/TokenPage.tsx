@@ -39,14 +39,14 @@ const TokenPage = () => {
 
             <AboutIce />
 
-            <DelegateBlock />
+            <DelegateBlock disableAnimation />
 
             <AquaPerformance />
 
             <SectionWrapper>
-                <Community />
+                <Community disableAnimation />
 
-                <Subscribe />
+                <Subscribe disableAnimation />
             </SectionWrapper>
         </PageContainer>
     );

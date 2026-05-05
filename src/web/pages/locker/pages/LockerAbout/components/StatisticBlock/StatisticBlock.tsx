@@ -5,8 +5,6 @@ import { getIceStatistics } from 'api/ice-locker';
 
 import { formatBalance } from 'helpers/format-number';
 
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
-
 import DotsLoader from 'basics/loaders/DotsLoader';
 
 import {
@@ -24,7 +22,6 @@ const UPDATE_INTERVAL = 60 * 1000;
 const StatisticBlock: React.FC = () => {
     const [statistics, setStatistics] = useState(null);
     const [updateIndex, setUpdateIndex] = useState(0);
-    const { ref, visible } = useScrollAnimation(0.3, true);
 
     // Periodically refresh ICE statistics
     useEffect(() => {
@@ -41,8 +38,8 @@ const StatisticBlock: React.FC = () => {
     }, [updateIndex]);
 
     return (
-        <Container ref={ref as React.RefObject<HTMLDivElement>} $visible={visible}>
-            <StatisticItem $visible={visible} $delay={0}>
+        <Container>
+            <StatisticItem>
                 <IconsBlock>
                     <AquaLogo />
                 </IconsBlock>
@@ -52,7 +49,7 @@ const StatisticBlock: React.FC = () => {
                 <Description>Total AQUA Locked</Description>
             </StatisticItem>
 
-            <StatisticItem $visible={visible} $delay={0.15}>
+            <StatisticItem>
                 <IconsBlock>
                     <IceLogo />
                 </IconsBlock>
@@ -66,7 +63,7 @@ const StatisticBlock: React.FC = () => {
                 <Description>Total ICE Issued</Description>
             </StatisticItem>
 
-            <StatisticItem $visible={visible} $delay={0.3}>
+            <StatisticItem>
                 <IconsBlock>
                     <AquaLogo />
                     <IceLogo />

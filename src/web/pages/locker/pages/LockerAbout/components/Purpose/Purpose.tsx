@@ -2,8 +2,6 @@ import * as React from 'react';
 
 import { AppRoutes } from 'constants/routes';
 
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
-
 import ArrowLeft from 'assets/icons/arrows/arrow-left-16.svg';
 
 import { BlankRouterLink } from 'basics/links';
@@ -19,20 +17,18 @@ import {
 } from './Purpose.styled';
 
 const Purpose: React.FC = () => {
-    const { ref, visible } = useScrollAnimation(0.2, true);
-
     return (
-        <Container ref={ref as React.RefObject<HTMLDivElement>}>
-            <Content $visible={visible}>
-                <TextContainer $visible={visible}>
+        <Container>
+            <Content>
+                <TextContainer>
                     <BlankRouterLink to={AppRoutes.section.locker.link.index}>
                         <BackButton label="Back to locker">
                             <ArrowLeft />
                         </BackButton>
                     </BlankRouterLink>
 
-                    <Title $visible={visible}>Freeze your AQUA into ICE!</Title>
-                    <Description $visible={visible}>
+                    <Title>Freeze your AQUA into ICE!</Title>
+                    <Description>
                         Lock AQUA to receive ICE — a non-transferable token that boosts your voting
                         power and increases your rewards across the Aquarius ecosystem. Use ICE to
                         vote for markets, earn bribes and protocol incentives, and unlock higher
@@ -40,7 +36,7 @@ const Purpose: React.FC = () => {
                     </Description>
                 </TextContainer>
 
-                <Image $visible={visible} />
+                <Image />
             </Content>
         </Container>
     );

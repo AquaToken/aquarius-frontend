@@ -1,7 +1,5 @@
 import * as React from 'react';
 
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
-
 import BoostRewardsIcon from 'assets/main-page/boost-rewards.svg';
 import EarnByMarketIcon from 'assets/main-page/earn-by-market.svg';
 import EarnMoreIcon from 'assets/main-page/earn-more.svg';
@@ -31,10 +29,8 @@ interface Props {
 }
 
 const WhyProvideLiq: React.FC<Props> = ({ monthlyDistributed, isLoading }) => {
-    const { ref, visible } = useScrollAnimation(0.25, true);
-
     const whyStatsContent = (
-        <WhyStats $visible={visible}>
+        <WhyStats>
             <StatsTitle>{isLoading ? <DotsLoader /> : monthlyDistributed}</StatsTitle>
             <DescriptionStats>
                 Monthly AQUA rewards shared among liquidity providers.
@@ -43,19 +39,15 @@ const WhyProvideLiq: React.FC<Props> = ({ monthlyDistributed, isLoading }) => {
     );
 
     return (
-        <Wrapper
-            ref={ref as React.RefObject<HTMLDivElement>}
-            $visible={visible}
-            id="why-provide-liquidity"
-        >
+        <Wrapper id="why-provide-liquidity">
             <WhyBlocks>
                 <Block>
-                    <WhyTitle $visible={visible}>Why Provide Liquidity?</WhyTitle>
+                    <WhyTitle>Why Provide Liquidity?</WhyTitle>
                     <HideOnSm>{whyStatsContent}</HideOnSm>
                 </Block>
 
-                <InfoBlock $visible={visible}>
-                    <InfoWrapper $visible={visible} $delay={0.1}>
+                <InfoBlock>
+                    <InfoWrapper>
                         <EarnMoreIcon />
                         <DescBlock>
                             <DescTitle>Earn more than swap fees</DescTitle>
@@ -66,7 +58,7 @@ const WhyProvideLiq: React.FC<Props> = ({ monthlyDistributed, isLoading }) => {
                         </DescBlock>
                     </InfoWrapper>
 
-                    <InfoWrapper $visible={visible} $delay={0.25}>
+                    <InfoWrapper>
                         <BoostRewardsIcon />
                         <DescBlock>
                             <DescTitle>Boost your rewards with ICE</DescTitle>
@@ -76,7 +68,7 @@ const WhyProvideLiq: React.FC<Props> = ({ monthlyDistributed, isLoading }) => {
                         </DescBlock>
                     </InfoWrapper>
 
-                    <InfoWrapper $visible={visible} $delay={0.4}>
+                    <InfoWrapper>
                         <EarnByMarketIcon />
                         <DescBlock>
                             <DescTitle>Earn by market making on SDEX</DescTitle>

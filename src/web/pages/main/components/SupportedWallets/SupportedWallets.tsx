@@ -1,7 +1,5 @@
 import * as React from 'react';
 
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
-
 import LobstrIcon from 'assets/wallets/lobstr/lobstr-name-logo.svg';
 import StellarTermIcon from 'assets/wallets/stellarterm-logo.svg';
 import StellarXIcon from 'assets/wallets/stellarx-logo.svg';
@@ -17,66 +15,30 @@ import {
 } from './SupportedWallets.styled';
 
 const SupportedWallets: React.FC = () => {
-    const { ref, visible } = useScrollAnimation(0.2, true);
-
     return (
-        <Wrapper
-            id="supported-wallets"
-            ref={ref as React.RefObject<HTMLElement>}
-            $visible={visible}
-        >
-            <Title $visible={visible}>Supported by:</Title>
+        <Wrapper id="supported-wallets">
+            <Title>Supported by:</Title>
 
             <ImageBlock>
-                <FlexTitle $visible={visible}>Supported by:</FlexTitle>
+                <FlexTitle>Supported by:</FlexTitle>
 
-                <IconWrapper
-                    href="https://lobstr.co/"
-                    target="_blank"
-                    rel="noreferrer"
-                    $visible={visible}
-                    $delay={0.05}
-                >
+                <IconWrapper href="https://lobstr.co/" target="_blank" rel="noreferrer">
                     <LobstrIcon />
                 </IconWrapper>
 
-                <IconWrapper
-                    href="https://www.stellarx.com/"
-                    target="_blank"
-                    rel="noreferrer"
-                    $visible={visible}
-                    $delay={0.15}
-                >
+                <IconWrapper href="https://www.stellarx.com/" target="_blank" rel="noreferrer">
                     <StellarXIcon />
                 </IconWrapper>
 
-                <IconWrapper
-                    href="https://www.freighter.app/"
-                    target="_blank"
-                    rel="noreferrer"
-                    $visible={visible}
-                    $delay={0.25}
-                >
+                <IconWrapper href="https://www.freighter.app/" target="_blank" rel="noreferrer">
                     <FreighterIcon />
                 </IconWrapper>
 
-                <IconWrapper
-                    href="https://stellarterm.com/"
-                    target="_blank"
-                    rel="noreferrer"
-                    $visible={visible}
-                    $delay={0.35}
-                >
+                <IconWrapper href="https://stellarterm.com/" target="_blank" rel="noreferrer">
                     <StellarTermIcon />
                 </IconWrapper>
 
-                <IconWrapper
-                    href="https://hot-labs.org/"
-                    target="_blank"
-                    rel="noreferrer"
-                    $visible={visible}
-                    $delay={0.45}
-                >
+                <IconWrapper href="https://hot-labs.org/" target="_blank" rel="noreferrer">
                     <HotWalletIcon />
                 </IconWrapper>
             </ImageBlock>

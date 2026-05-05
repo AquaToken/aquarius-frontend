@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
-
 import {
     Wrapper,
     TitleBlocks,
@@ -46,7 +44,6 @@ const TABS: { key: TabKey; label: string; description: string }[] = [
 
 const LiqPoolsTabs = () => {
     const [active, setActive] = useState<TabKey>(TABS[0].key);
-    const { ref, visible } = useScrollAnimation(0.2, true);
     const activeTabIndex = TABS.findIndex(({ key }) => key === active);
     const activeTab = TABS[activeTabIndex] || TABS[0];
     const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -77,15 +74,11 @@ const LiqPoolsTabs = () => {
     }, [activeTabIndex]);
 
     return (
-        <Wrapper
-            ref={ref as React.RefObject<HTMLDivElement>}
-            $visible={visible}
-            id="liquidity-pools"
-        >
+        <Wrapper id="liquidity-pools">
             <HeroTopLeftStyled />
             <HeroBottomRightStyled />
 
-            <TitleBlocks $visible={visible}>
+            <TitleBlocks>
                 <Block>
                     <Title>
                         Liquidity pools are the <b>foundation of Aquarius</b>
@@ -105,7 +98,7 @@ const LiqPoolsTabs = () => {
                 </CheckboxesBlock>
             </TitleBlocks>
 
-            <TabsBlock $visible={visible}>
+            <TabsBlock>
                 <Tabs>
                     {TABS.map(({ key, label }, index) => (
                         <TabBtn

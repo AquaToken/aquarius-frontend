@@ -1,7 +1,5 @@
 import * as React from 'react';
-import styled, { css } from 'styled-components';
-
-import { useScrollAnimation } from 'hooks/useScrollAnimation';
+import styled from 'styled-components';
 
 import CMC from 'assets/orgs/coin-market-cap.svg';
 import Coingecko from 'assets/orgs/coingecko.svg';
@@ -13,7 +11,6 @@ import Probit from 'assets/orgs/probit-logo.svg';
 import Expert from 'assets/orgs/stellar-expert.svg';
 import XT from 'assets/orgs/xt.svg';
 
-import { containerScrollAnimation, slideUpSoftAnimation } from 'styles/animations';
 import { commonMaxWidth, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS } from 'styles/style-constants';
 
@@ -23,12 +20,11 @@ import AquaLink from 'pages/token/components/AquaLinks/AquaLink/AquaLink';
 /*                                 Styled                                     */
 /* -------------------------------------------------------------------------- */
 
-const Container = styled.div<{ $visible: boolean }>`
+const Container = styled.div`
     padding: 0 10rem;
     ${commonMaxWidth};
     margin-top: 4.8rem;
     width: 100%;
-    ${containerScrollAnimation};
 
     ${respondDown(Breakpoints.sm)`
         padding: 0;
@@ -36,12 +32,11 @@ const Container = styled.div<{ $visible: boolean }>`
     `}
 `;
 
-const Content = styled.div<{ $visible: boolean }>`
+const Content = styled.div`
     display: flex;
     align-items: center;
     padding: 2.2rem 0;
     width: 100%;
-    ${({ $visible }) => $visible && slideUpSoftAnimation};
 
     ${respondDown(Breakpoints.sm)`
         padding: 0;
@@ -54,18 +49,11 @@ const Content = styled.div<{ $visible: boolean }>`
     `}
 `;
 
-const Section = styled.div<{ $visible: boolean; $delay: number }>`
+const Section = styled.div`
     display: flex;
     flex-direction: column;
     gap: 2.4rem;
     width: 50%;
-    opacity: 0;
-    ${({ $visible, $delay }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: ${$delay}s;
-        `}
 
     ${respondDown(Breakpoints.md)`
         width: 100%;
@@ -92,12 +80,10 @@ const Links = styled.div`
 /* -------------------------------------------------------------------------- */
 
 const AquaLinks = ({ ...props }) => {
-    const { ref, visible } = useScrollAnimation(0.3, true);
-
     return (
-        <Container ref={ref as React.RefObject<HTMLDivElement>} $visible={visible} {...props}>
-            <Content $visible={visible}>
-                <Section $visible={visible} $delay={0}>
+        <Container {...props}>
+            <Content>
+                <Section>
                     <Label>See on</Label>
                     <Links>
                         <AquaLink
@@ -127,7 +113,7 @@ const AquaLinks = ({ ...props }) => {
                     </Links>
                 </Section>
 
-                <Section $visible={visible} $delay={0.15}>
+                <Section>
                     <Label>Listed on</Label>
                     <Links>
                         <AquaLink href="https://www.xt.com/en/trade/aqua_usdc" label="XT">

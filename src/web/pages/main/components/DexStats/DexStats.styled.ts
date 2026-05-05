@@ -1,18 +1,12 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
-import {
-    containerScrollAnimation,
-    fadeAppearAnimation,
-    slideUpSoftAnimation,
-} from 'styles/animations';
 import { flexAllCenter, respondDown } from 'styles/mixins';
 import { Breakpoints, COLORS } from 'styles/style-constants';
 
-export const Wrapper = styled.section<{ $visible: boolean }>`
+export const Wrapper = styled.section`
     ${flexAllCenter};
     flex-direction: column;
     margin-top: 11rem;
-    ${containerScrollAnimation};
 
     ${respondDown(Breakpoints.md)`
     font-size: 6rem;
@@ -25,25 +19,16 @@ export const Wrapper = styled.section<{ $visible: boolean }>`
   `}
 `;
 
-export const DexTitle = styled.div<{ $visible: boolean }>`
+export const DexTitle = styled.div`
     font-weight: bold;
     font-size: 7rem;
     color: ${COLORS.textPrimary};
     line-height: 100%;
-    opacity: 0;
-
-    ${({ $visible }) =>
-        $visible &&
-        css`
-            ${fadeAppearAnimation};
-            animation-delay: 0.15s;
-        `}
-
     ${respondDown(Breakpoints.md)`
     font-size: 5.6rem;
   `}
 
-  ${respondDown(Breakpoints.sm)`
+    ${respondDown(Breakpoints.sm)`
     font-size: 3.2rem;
   `}
 
@@ -104,19 +89,11 @@ export const StatsBlock = styled(Block)`
   `}
 `;
 
-export const StatWrapper = styled.div<{ $visible: boolean; $delay: number }>`
+export const StatWrapper = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.8rem;
-    opacity: 0;
-
-    ${({ $visible, $delay }) =>
-        $visible &&
-        css`
-            ${slideUpSoftAnimation};
-            animation-delay: ${$delay}s;
-        `}
 `;
 
 export const StatsTitle = styled.div`
