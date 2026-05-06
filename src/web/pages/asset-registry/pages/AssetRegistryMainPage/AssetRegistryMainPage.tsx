@@ -8,6 +8,7 @@ import {
     getRegistryVoteHistoryRequest,
     getUpcomingRegistryVotesRequest,
 } from 'api/asset-registry';
+import { getRewards, RewardsSort } from 'api/rewards';
 
 import { getEnvClassicAssetData } from 'helpers/assets';
 import { convertLocalDateToUTCIgnoringTimezone, getDateString } from 'helpers/date';
@@ -28,6 +29,8 @@ import { Input } from 'basics/inputs';
 import { PageContainer } from 'styles/commonPageStyles';
 import { COLORS } from 'styles/style-constants';
 
+import { Rewards } from 'pages/vote/api/types';
+
 import {
     FilterGroup,
     FilterSelect,
@@ -45,6 +48,7 @@ import {
     UpcomingVoteData,
 } from './AssetRegistryMainPage.types';
 import AssetRegistryContent from './components/AssetRegistryContent/AssetRegistryContent';
+import AssetRegistryMigrationStatus from './components/AssetRegistryMigrationStatus/AssetRegistryMigrationStatus';
 
 const FILTER_OPTIONS: Option<AssetRegistryFilter>[] = [
     { label: 'All', value: AssetRegistryFilter.all },
@@ -83,6 +87,9 @@ const DEFAULT_REGISTRY_ASSETS: RegistryAsset[] = [
 
 const getRegistryAssetId = (asset: RegistryAsset) =>
     `${asset.asset_code ?? 'unknown'}:${asset.asset_issuer ?? 'native'}`;
+
+const getRewardsAssetId = (code: string, issuer: string) =>
+    code === 'XLM' && !issuer ? 'XLM:native' : `${code}:${issuer}`;
 
 const MOCK_UPCOMING_VOTES_ASSETS: Array<Pick<UpcomingVoteData, 'assetCode' | 'assetIssuer'>> = [
     {
@@ -147,6 +154,8 @@ const AssetRegistryMainPage = () => {
     const [historyVoteProposals, setHistoryVoteProposals] = useState<RegistryProposalPreview[]>([]);
     const [isMyVotesLoading, setIsMyVotesLoading] = useState(false);
     const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+    const [rewards, setRewards] = useState<Rewards[] | null>(null);
+    const [isRewardsLoading, setIsRewardsLoading] = useState(true);
     const [marketStats, setMarketStats] = useState<RegistryAssetMarketStatsMap>({});
     const [isMarketStatsLoading, setIsMarketStatsLoading] = useState(true);
     const { account, isLogged } = useAuthStore();
@@ -238,6 +247,33 @@ const AssetRegistryMainPage = () => {
             isCancelled = true;
         };
     }, [account, filter, isLogged]);
+
+    useEffect(() => {
+        let isCancelled = false;
+
+        setIsRewardsLoading(true);
+
+        getRewards(RewardsSort.totalUp)
+            .then(data => {
+                if (!isCancelled) {
+                    setRewards(data);
+                }
+            })
+            .catch(() => {
+                if (!isCancelled) {
+                    setRewards([]);
+                }
+            })
+            .finally(() => {
+                if (!isCancelled) {
+                    setIsRewardsLoading(false);
+                }
+            });
+
+        return () => {
+            isCancelled = true;
+        };
+    }, []);
 
     useEffect(() => {
         let isCancelled = false;
@@ -349,6 +385,65 @@ const AssetRegistryMainPage = () => {
         return [...DEFAULT_REGISTRY_ASSETS, ...uniqueApiRegistryAssets];
     }, [apiRegistryAssets]);
 
+    const whitelistedRegistryAssets = useMemo(() => {
+        if (!apiRegistryAssets) {
+            return [];
+        }
+
+        const uniqueAssets = new Map<string, RegistryAsset>();
+
+        DEFAULT_REGISTRY_ASSETS.forEach(asset => {
+            uniqueAssets.set(getRegistryAssetId(asset), asset);
+        });
+
+        apiRegistryAssets
+            .filter(asset => asset.whitelisted)
+            .forEach(asset => {
+                uniqueAssets.set(getRegistryAssetId(asset), asset);
+            });
+
+        return [...uniqueAssets.values()];
+    }, [apiRegistryAssets]);
+
+    const whitelistedAssetsIds = useMemo(
+        () => new Set(whitelistedRegistryAssets.map(getRegistryAssetId)),
+        [whitelistedRegistryAssets],
+    );
+
+    const totalAmmRewardsAmount = useMemo(() => {
+        if (!rewards) {
+            return 0;
+        }
+
+        return rewards.reduce((sum, reward) => sum + (reward.daily_amm_reward ?? 0), 0);
+    }, [rewards]);
+
+    const whitelistedAmmRewardsAmount = useMemo(() => {
+        if (!rewards) {
+            return 0;
+        }
+
+        return rewards.reduce((sum, { daily_amm_reward, market_key }) => {
+            const firstAssetId = getRewardsAssetId(
+                market_key.asset1_code,
+                market_key.asset1_issuer ?? '',
+            );
+            const secondAssetId = getRewardsAssetId(
+                market_key.asset2_code,
+                market_key.asset2_issuer ?? '',
+            );
+
+            if (
+                !whitelistedAssetsIds.has(firstAssetId) ||
+                !whitelistedAssetsIds.has(secondAssetId)
+            ) {
+                return sum;
+            }
+
+            return sum + (daily_amm_reward ?? 0);
+        }, 0);
+    }, [rewards, whitelistedAssetsIds]);
+
     const filteredItems = useMemo(() => {
         const searchValue = search.trim().toLowerCase();
 
@@ -394,6 +489,15 @@ const AssetRegistryMainPage = () => {
                 <Title>Asset Registry</Title>
 
                 <AssetRegistryContent
+                    topContent={
+                        <AssetRegistryMigrationStatus
+                            whitelistedAssetsCount={whitelistedRegistryAssets.length}
+                            totalAmmRewardsAmount={totalAmmRewardsAmount}
+                            whitelistedAmmRewardsAmount={whitelistedAmmRewardsAmount}
+                            isAssetsLoading={!apiRegistryAssets}
+                            isRewardsLoading={isRewardsLoading}
+                        />
+                    }
                     items={filteredItems}
                     voteProposals={voteProposals}
                     isVotesMode={isVotesMode}

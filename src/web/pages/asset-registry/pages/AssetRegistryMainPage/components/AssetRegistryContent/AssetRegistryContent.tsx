@@ -13,6 +13,7 @@ import AssetRegistryMyVotesList from '../AssetRegistryMyVotesList/AssetRegistryM
 import AssetRegistrySidebar from '../AssetRegistrySidebar/AssetRegistrySidebar';
 
 type AssetRegistryContentProps = {
+    topContent?: React.ReactNode;
     items: RegistryAsset[];
     voteProposals: RegistryProposalPreview[];
     isVotesMode: boolean;
@@ -24,6 +25,7 @@ type AssetRegistryContentProps = {
 };
 
 const AssetRegistryContent = ({
+    topContent,
     items,
     voteProposals,
     isVotesMode,
@@ -35,6 +37,7 @@ const AssetRegistryContent = ({
 }: AssetRegistryContentProps) => (
     <Layout>
         <LeftColumn>
+            {topContent}
             {toolbar}
             {isVotesMode ? (
                 <AssetRegistryMyVotesList proposals={voteProposals} isLoading={isVotesLoading} />
