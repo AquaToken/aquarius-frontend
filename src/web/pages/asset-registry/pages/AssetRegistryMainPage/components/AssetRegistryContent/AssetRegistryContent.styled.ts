@@ -7,7 +7,6 @@ export const Layout = styled.div`
     display: grid;
     grid-template-columns: minmax(0, 1fr) 32rem;
     gap: 3.2rem;
-    margin-top: 3.2rem;
 
     ${respondDown(Breakpoints.lg)`
         grid-template-columns: 1fr;

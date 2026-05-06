@@ -10,6 +10,7 @@ export const Card = styled.section`
     background: ${COLORS.white};
     border-radius: 3.2rem;
     padding: 3.2rem;
+    margin-top: 3.2rem;
     width: 100%;
 
     ${respondDown(Breakpoints.md)`

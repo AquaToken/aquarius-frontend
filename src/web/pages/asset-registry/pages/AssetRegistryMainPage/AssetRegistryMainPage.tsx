@@ -486,17 +486,18 @@ const AssetRegistryMainPage = () => {
     return (
         <PageContainer $color={COLORS.gray50}>
             <MainSection>
-                <Title>Asset Registry</Title>
-
                 <AssetRegistryContent
                     topContent={
-                        <AssetRegistryMigrationStatus
-                            whitelistedAssetsCount={whitelistedRegistryAssets.length}
-                            totalAmmRewardsAmount={totalAmmRewardsAmount}
-                            whitelistedAmmRewardsAmount={whitelistedAmmRewardsAmount}
-                            isAssetsLoading={!apiRegistryAssets}
-                            isRewardsLoading={isRewardsLoading}
-                        />
+                        <>
+                            <Title>Asset Registry</Title>
+                            <AssetRegistryMigrationStatus
+                                whitelistedAssetsCount={whitelistedRegistryAssets.length}
+                                totalAmmRewardsAmount={totalAmmRewardsAmount}
+                                whitelistedAmmRewardsAmount={whitelistedAmmRewardsAmount}
+                                isAssetsLoading={!apiRegistryAssets}
+                                isRewardsLoading={isRewardsLoading}
+                            />
+                        </>
                     }
                     items={filteredItems}
                     voteProposals={voteProposals}
