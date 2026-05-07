@@ -30,10 +30,47 @@ type AssetRegistryMigrationStatusProps = {
     isRewardsLoading: boolean;
 };
 
+enum AssetMigrationStatusStage {
+    awaitingThreshold = 'awaitingThreshold',
+    thresholdReached = 'thresholdReached',
+    migrationScheduled = 'migrationScheduled',
+    live = 'live',
+}
+
 const ASSET_MIGRATION_TOTAL_ASSETS_TARGET = 15;
 const ASSET_MIGRATION_REWARD_TARGET = 50;
 const ASSET_MIGRATION_PROPOSAL_ID = '125';
-const isMigrationComplete = false;
+const MIGRATION_GO_LIVE_DATE = '01 Jul, 2026';
+const manualMigrationStatusStage:
+    | AssetMigrationStatusStage.migrationScheduled
+    | AssetMigrationStatusStage.live
+    | null = null;
+
+const MIGRATION_STATUS_CONTENT = {
+    [AssetMigrationStatusStage.awaitingThreshold]: {
+        badgeLabel: 'Awaiting Threshold',
+        title: 'Whitelisted Rewards Not Yet Active',
+        description:
+            'Once one of the conditions below is met, Aquarius will switch to a new rewards model — only markets containing whitelisted assets will be eligible for AQUA rewards.',
+    },
+    [AssetMigrationStatusStage.thresholdReached]: {
+        badgeLabel: 'Threshold Reached',
+        title: 'Whitelisted Rewards Approved',
+        description:
+            'The threshold has been reached. Aquarius will soon switch to a new rewards model — only markets with whitelisted assets will earn AQUA rewards going forward.',
+    },
+    [AssetMigrationStatusStage.migrationScheduled]: {
+        badgeLabel: 'Migration Scheduled',
+        title: `Whitelisted Rewards Going Live on ${MIGRATION_GO_LIVE_DATE}`,
+        description: `On ${MIGRATION_GO_LIVE_DATE}, Aquarius will switch to whitelisted-only rewards. Only markets containing whitelisted assets will be eligible for AQUA rewards from that point on.`,
+    },
+    [AssetMigrationStatusStage.live]: {
+        badgeLabel: 'Live',
+        title: 'Whitelisted Rewards Active',
+        description:
+            'Aquarius now distributes AQUA rewards exclusively to markets containing whitelisted assets.',
+    },
+} as const;
 
 const AssetRegistryMigrationStatus = ({
     whitelistedAssetsCount,
@@ -42,25 +79,35 @@ const AssetRegistryMigrationStatus = ({
     isAssetsLoading,
     isRewardsLoading,
 }: AssetRegistryMigrationStatusProps) => {
+    const approvedAssetsPercent = isAssetsLoading
+        ? 0
+        : +getPercentValue(Number(whitelistedAssetsCount), ASSET_MIGRATION_TOTAL_ASSETS_TARGET);
     const rewardsAlignmentPercent =
-        totalAmmRewardsAmount && whitelistedAmmRewardsAmount !== undefined
+        !isRewardsLoading && totalAmmRewardsAmount && whitelistedAmmRewardsAmount !== undefined
             ? getPercentValue(whitelistedAmmRewardsAmount, totalAmmRewardsAmount)
             : undefined;
+    const isThresholdReached =
+        approvedAssetsPercent >= 100 ||
+        Number(rewardsAlignmentPercent ?? 0) >= ASSET_MIGRATION_REWARD_TARGET;
+    const resolvedMigrationStatusStage =
+        manualMigrationStatusStage ??
+        (isThresholdReached
+            ? AssetMigrationStatusStage.thresholdReached
+            : AssetMigrationStatusStage.awaitingThreshold);
+    const migrationStatus = MIGRATION_STATUS_CONTENT[resolvedMigrationStatusStage];
+    const isMigrationComplete = resolvedMigrationStatusStage === AssetMigrationStatusStage.live;
 
     return (
         <Card>
             <Header>
-                <Title>Asset Whitelisting Migration Status</Title>
+                <Title>{migrationStatus.title}</Title>
                 <StatusBadge $isComplete={isMigrationComplete}>
                     {isMigrationComplete ? <Check16 /> : <Pending16 />}
-                    {isMigrationComplete ? 'Migration Complete' : 'Migration Pending'}
+                    {migrationStatus.badgeLabel}
                 </StatusBadge>
             </Header>
 
-            <Description>
-                When at least one of the below conditions is met Aquarius will automatically migrate
-                to asset whitelisting.
-            </Description>
+            <Description>{migrationStatus.description}</Description>
 
             <ProgressWrap>
                 <ProgressLine
@@ -72,12 +119,7 @@ const AssetRegistryMigrationStatus = ({
                             `${whitelistedAssetsCount ?? 0}/${ASSET_MIGRATION_TOTAL_ASSETS_TARGET}`
                         )
                     }
-                    percent={
-                        +getPercentValue(
-                            Number(whitelistedAssetsCount),
-                            ASSET_MIGRATION_TOTAL_ASSETS_TARGET,
-                        )
-                    }
+                    percent={approvedAssetsPercent}
                     color={COLORS.blue500}
                 />
                 <ProgressLine
@@ -91,10 +133,12 @@ const AssetRegistryMigrationStatus = ({
                     }
                     percent={Math.min(
                         100,
-                        +getPercentValue(
-                            Number(rewardsAlignmentPercent),
-                            ASSET_MIGRATION_REWARD_TARGET,
-                        ),
+                        isRewardsLoading
+                            ? 0
+                            : +getPercentValue(
+                                  Number(rewardsAlignmentPercent),
+                                  ASSET_MIGRATION_REWARD_TARGET,
+                              ),
                     )}
                 />
             </ProgressWrap>
