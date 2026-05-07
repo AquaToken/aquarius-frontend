@@ -37,17 +37,19 @@ const Outer = styled.div`
 const Inner = styled.div<{ $width: string }>`
     ${progressLineStyles};
     width: ${({ $width }) => $width};
-    background-color: ${COLORS.purple500};
+    background-color: ${({ $color }: { $color?: string }) => $color || COLORS.purple500};
 `;
 
 const ProgressLine = ({
     percent,
     leftLabel,
     rightLabel,
+    color = COLORS.purple500,
 }: {
     percent: number;
     leftLabel: string;
     rightLabel: string | React.ReactNode;
+    color?: string;
 }): React.ReactNode => (
     <Container>
         <Labels>
@@ -55,7 +57,7 @@ const ProgressLine = ({
             <span>{rightLabel}</span>
         </Labels>
         <Outer>
-            <Inner $width={`${percent}%` || '0'} />
+            <Inner $width={`${percent}%` || '0'} $color={color} />
         </Outer>
     </Container>
 );
