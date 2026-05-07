@@ -1,7 +1,7 @@
 import * as StellarSdk from '@stellar/stellar-sdk';
 import axios from 'axios';
 
-import { ALL_ICE_ASSETS } from 'constants/assets';
+import { getAllIceAssets } from 'constants/assets';
 
 import { getAssetString } from 'helpers/assets';
 import { getNetworkPassphrase } from 'helpers/env';
@@ -10,7 +10,7 @@ import { getIceApproveEndpoint } from 'helpers/ice';
 import { ClassicToken } from 'types/token';
 
 export const isIceApprovalRequired = (asset: ClassicToken): boolean =>
-    ALL_ICE_ASSETS.includes(getAssetString(asset));
+    getAllIceAssets().includes(getAssetString(asset));
 
 export const processIceTx = async (
     tx: StellarSdk.Transaction,

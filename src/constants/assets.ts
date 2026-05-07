@@ -1,30 +1,30 @@
-import {
-    D_ICE_CODE,
-    DOWN_ICE_CODE,
-    GD_ICE_CODE,
-    GOV_ICE_CODE,
-    ICE_CODE,
-    ICE_ISSUER,
-    UP_ICE_CODE,
-} from './assets-env';
+import { getEnv } from 'helpers/env';
 
-export const DEFAULT_ICE_ASSETS = [
-    `${ICE_CODE}:${ICE_ISSUER}`,
-    `${GOV_ICE_CODE}:${ICE_ISSUER}`,
-    `${UP_ICE_CODE}:${ICE_ISSUER}`,
-    `${DOWN_ICE_CODE}:${ICE_ISSUER}`,
-];
+import { ENV_ICE_ASSETS_CONFIG, type EnvIceAssetName } from './assets-env';
 
-export const DELEGATED_ICE_ASSETS = [`${D_ICE_CODE}:${ICE_ISSUER}`, `${GD_ICE_CODE}:${ICE_ISSUER}`];
+type ClassicAssetConfig = { code: string; issuer: string };
 
-export const ICE_TO_DELEGATE = [`${UP_ICE_CODE}:${ICE_ISSUER}`, `${GOV_ICE_CODE}:${ICE_ISSUER}`];
+const getClassicAssetString = ({ code, issuer }: ClassicAssetConfig) => `${code}:${issuer}`;
 
-export const ICE_DELEGATION_MAP = new Map([
-    [`${UP_ICE_CODE}:${ICE_ISSUER}`, `${D_ICE_CODE}:${ICE_ISSUER}`],
-    [`${GOV_ICE_CODE}:${ICE_ISSUER}`, `${GD_ICE_CODE}:${ICE_ISSUER}`],
-]);
+export const getIceAssetString = (name: EnvIceAssetName) =>
+    getClassicAssetString(ENV_ICE_ASSETS_CONFIG[name][getEnv()]);
 
-export const ALL_ICE_ASSETS = [...DEFAULT_ICE_ASSETS, ...DELEGATED_ICE_ASSETS];
+export const getDefaultIceAssets = () =>
+    (['ice', 'governIce', 'upvoteIce', 'downvoteIce'] as EnvIceAssetName[]).map(getIceAssetString);
+
+export const getDelegatedIceAssets = () =>
+    (['dIce', 'gdIce'] as EnvIceAssetName[]).map(getIceAssetString);
+
+export const getIceToDelegate = () =>
+    (['upvoteIce', 'governIce'] as EnvIceAssetName[]).map(getIceAssetString);
+
+export const getIceDelegationMap = () =>
+    new Map([
+        [getIceAssetString('upvoteIce'), getIceAssetString('dIce')],
+        [getIceAssetString('governIce'), getIceAssetString('gdIce')],
+    ]);
+
+export const getAllIceAssets = () => [...getDefaultIceAssets(), ...getDelegatedIceAssets()];
 
 export const PYUSD_CODE = 'PYUSD';
 export const PYUSD_ISSUER = 'GDQE7IXJ4HUHV6RQHIUPRJSEZE4DRS5WY577O2FY6YQ5LVWZ7JZTU2V5';

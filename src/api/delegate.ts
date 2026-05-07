@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import { API_DELEGATION_URL } from 'constants/api';
-import { ICE_DELEGATION_MAP } from 'constants/assets';
+import { getIceDelegationMap } from 'constants/assets';
 
 import { getAssetString } from 'helpers/assets';
 
@@ -31,12 +31,10 @@ export const getDelegateeVotes = async (
     accountId: string,
     token: ClassicToken,
 ): Promise<(DelegateeVote & MarketKey)[]> => {
+    const iceDelegationMap = getIceDelegationMap();
+    const delegatedAsset = iceDelegationMap.get(getAssetString(token));
     const votes = await axios
-        .get<DelegateeVote[]>(
-            `${API_URL_V2}${accountId}/distribution?asset=${ICE_DELEGATION_MAP.get(
-                getAssetString(token),
-            )}`,
-        )
+        .get<DelegateeVote[]>(`${API_URL_V2}${accountId}/distribution?asset=${delegatedAsset}`)
         .then(({ data }) => data);
 
     const markets = await getMarketsMap(votes.map(item => item.market_key));

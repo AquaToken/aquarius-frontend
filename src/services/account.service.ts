@@ -6,8 +6,8 @@ import { getNativePrices } from 'api/amm';
 import { sentToVault } from 'api/vault';
 
 import { POOL_TYPE } from 'constants/amm';
-import { DEFAULT_ICE_ASSETS } from 'constants/assets';
-import { ASSETS_ENV_DATA, TESTNET_DISTRIBUTION_AMOUNTS } from 'constants/assets-env';
+import { getDefaultIceAssets } from 'constants/assets';
+import { ENV_CLASSIC_ASSETS_CONFIG, TESTNET_DISTRIBUTION_AMOUNTS } from 'constants/assets-env';
 import { ENV_TESTNET } from 'constants/env';
 
 import { getAssetFromString } from 'helpers/assets';
@@ -27,7 +27,7 @@ import { BuildSignAndSubmitStatuses } from './auth/wallet-connect/wallet-connect
 import { AuthService, ModalService, SorobanService, StellarService } from './globalServices';
 
 const VAULT_MARKER = 'GA2T6GR7VXXXBETTERSAFETHANSORRYXXXPROTECTEDBYLOBSTRVAULT';
-const { aquaCode, aquaIssuer } = ASSETS_ENV_DATA[getEnv()].aqua;
+const { code: aquaCode, issuer: aquaIssuer } = ENV_CLASSIC_ASSETS_CONFIG.aqua[getEnv()];
 
 export default class AccountService extends Horizon.AccountResponse {
     authType?: LoginTypes;
@@ -314,15 +314,17 @@ export default class AccountService extends Horizon.AccountResponse {
     }
 
     hasAllIceTrustlines() {
-        return DEFAULT_ICE_ASSETS.map(asset => {
-            const [code, issuer] = asset.split(':');
-            const stellarAsset = createAsset(code, issuer);
-            return this.getAssetBalance(stellarAsset);
-        }).every(asset => asset !== null);
+        return getDefaultIceAssets()
+            .map(asset => {
+                const [code, issuer] = asset.split(':');
+                const stellarAsset = createAsset(code, issuer);
+                return this.getAssetBalance(stellarAsset);
+            })
+            .every(asset => asset !== null);
     }
 
     getUntrustedIceAssets() {
-        return DEFAULT_ICE_ASSETS.reduce((acc, asset) => {
+        return getDefaultIceAssets().reduce((acc, asset) => {
             const [code, issuer] = asset.split(':');
             const stellarAsset = createAsset(code, issuer);
             if (this.getAssetBalance(stellarAsset) === null) {

@@ -2,7 +2,7 @@ import { Dispatch } from 'react';
 
 import { getAssetsInfo, getAssetsRequest } from 'api/assets';
 
-import { ALL_ICE_ASSETS } from 'constants/assets';
+import { getAllIceAssets } from 'constants/assets';
 import { TESTNET_ASSETS } from 'constants/assets-env';
 
 import { getEnvClassicAssetData, getAssetFromString, getAssetString } from 'helpers/assets';
@@ -76,8 +76,10 @@ export function processNewAssets(assets: Token[] | AssetSimple[]) {
                 !createAsset(asset.code, (asset as ClassicToken | AssetSimple).issuer).isNative(),
         ) as ClassicToken[] | AssetSimple[];
 
-        if (!cached.has(ALL_ICE_ASSETS[ALL_ICE_ASSETS.length - 1])) {
-            newAssets.push(...ALL_ICE_ASSETS.map(str => getAssetFromString(str) as ClassicToken));
+        const allIceAssets = getAllIceAssets();
+
+        if (!cached.has(allIceAssets[allIceAssets.length - 1])) {
+            newAssets.push(...allIceAssets.map(str => getAssetFromString(str) as ClassicToken));
         }
 
         if (getIsTestnetEnv()) {

@@ -1,14 +1,6 @@
 import * as StellarSdk from '@stellar/stellar-sdk';
 
-import { ICE_TO_DELEGATE } from 'constants/assets';
-import {
-    D_ICE_CODE,
-    DOWN_ICE_CODE,
-    GD_ICE_CODE,
-    GOV_ICE_CODE,
-    ICE_ISSUER,
-    UP_ICE_CODE,
-} from 'constants/assets-env';
+import { getIceAssetString, getIceToDelegate } from 'constants/assets';
 import { DELEGATE_MARKER_KEY } from 'constants/stellar-accounts';
 
 import { getEnvClassicAssetData } from 'helpers/assets';
@@ -171,9 +163,9 @@ export default class ClaimableBalances {
             );
             const selfClaim = claim.claimants.find(claimant => claimant.destination === accountId);
             const isAqua = claim.asset === aquaAssetString;
-            const isUpIce = claim.asset === `${UP_ICE_CODE}:${ICE_ISSUER}`;
-            const isDownIce = claim.asset === `${DOWN_ICE_CODE}:${ICE_ISSUER}`;
-            const isDelegatedIce = claim.asset === `${D_ICE_CODE}:${ICE_ISSUER}`;
+            const isUpIce = claim.asset === getIceAssetString('upvoteIce');
+            const isDownIce = claim.asset === getIceAssetString('downvoteIce');
+            const isDelegatedIce = claim.asset === getIceAssetString('dIce');
 
             if (
                 (hasUpMarker || hasDownMarker) &&
@@ -205,9 +197,9 @@ export default class ClaimableBalances {
                 return acc;
             }
             const isAqua = claim.asset === aquaAssetString;
-            const isUpIce = claim.asset === `${UP_ICE_CODE}:${ICE_ISSUER}`;
-            const isDownIce = claim.asset === `${DOWN_ICE_CODE}:${ICE_ISSUER}`;
-            const isDelegatedIce = claim.asset === `${D_ICE_CODE}:${ICE_ISSUER}`;
+            const isUpIce = claim.asset === getIceAssetString('upvoteIce');
+            const isDownIce = claim.asset === getIceAssetString('downvoteIce');
+            const isDelegatedIce = claim.asset === getIceAssetString('dIce');
             const hasSelfClaim = claim.claimants.some(
                 claimant => claimant.destination === accountId,
             );
@@ -245,7 +237,7 @@ export default class ClaimableBalances {
                         claimant.destination === accountId && !!claimant.predicate?.not?.abs_before,
                 );
 
-                const isDelegatedIce = ICE_TO_DELEGATE.includes(claim.asset);
+                const isDelegatedIce = getIceToDelegate().includes(claim.asset);
 
                 if (hasMarker && Boolean(selfClaim) && isDelegatedIce) {
                     acc.push(claim);
@@ -280,7 +272,7 @@ export default class ClaimableBalances {
                     claimant.destination === accountId && !!claimant.predicate?.not?.unconditional,
             );
 
-            const isDelegatedIce = ICE_TO_DELEGATE.includes(claim.asset);
+            const isDelegatedIce = getIceToDelegate().includes(claim.asset);
 
             if (hasMarker && Boolean(selfClaim) && isDelegatedIce) {
                 acc.push(claim);

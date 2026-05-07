@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useMemo } from 'react';
 import styled from 'styled-components';
 
-import { ICE_DELEGATION_MAP, ICE_TO_DELEGATE } from 'constants/assets';
+import { getIceDelegationMap, getIceToDelegate } from 'constants/assets';
 
 import { getIsTestnetEnv } from 'helpers/env';
 import { formatBalance } from 'helpers/format-number';
@@ -29,6 +29,8 @@ interface Props {
 }
 
 const MyDelegators = ({ delegators }: Props) => {
+    const iceDelegationMap = getIceDelegationMap();
+    const iceToDelegate = getIceToDelegate();
     const processedLocks = useMemo(() => {
         if (!delegators || delegators.length === 0) return null;
 
@@ -72,13 +74,14 @@ const MyDelegators = ({ delegators }: Props) => {
                                 label: 'Account',
                             },
                             {
-                                children: ICE_TO_DELEGATE.map(str =>
-                                    amounts[str]
-                                        ? `${formatBalance(amounts[str], true)} ${
-                                              ICE_DELEGATION_MAP.get(str).split(':')[0]
-                                          }`
-                                        : null,
-                                )
+                                children: iceToDelegate
+                                    .map(str =>
+                                        amounts[str]
+                                            ? `${formatBalance(amounts[str], true)} ${
+                                                  iceDelegationMap.get(str).split(':')[0]
+                                              }`
+                                            : null,
+                                    )
                                     .filter(Boolean)
                                     .join(', '),
                                 label: 'Delegated',
