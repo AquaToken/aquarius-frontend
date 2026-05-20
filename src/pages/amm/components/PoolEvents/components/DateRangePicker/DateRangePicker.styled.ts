@@ -9,6 +9,8 @@ import { Breakpoints, COLORS } from 'styles/style-constants';
 
 export const DateFilterContainer = styled.div`
     position: relative;
+    width: 100%;
+    min-width: 0;
 `;
 
 export const DateFilterButton = styled.div<{ $isOpen: boolean }>`
@@ -17,8 +19,10 @@ export const DateFilterButton = styled.div<{ $isOpen: boolean }>`
     justify-content: space-between;
     gap: 1.2rem;
     width: 100%;
+    max-width: 100%;
     height: 4.8rem;
     padding: 0 1.6rem;
+    box-sizing: border-box;
     border: 0.1rem solid ${({ $isOpen }) => ($isOpen ? COLORS.purple500 : COLORS.gray100)};
     border-radius: 0.5rem;
     color: ${COLORS.textTertiary};
@@ -40,6 +44,7 @@ export const DateFilterButton = styled.div<{ $isOpen: boolean }>`
 `;
 
 export const DateFilterLabel = styled.span`
+    flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -66,6 +71,7 @@ export const DateDropdown = styled.div`
     width: 100%;
     min-width: 30.6rem;
     padding: 2.4rem;
+    box-sizing: border-box;
     border-radius: 0.5rem;
     background: ${COLORS.white};
     box-shadow: 0 2rem 1.5rem rgba(0, 6, 54, 0.06);
