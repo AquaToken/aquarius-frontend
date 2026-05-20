@@ -8,7 +8,7 @@ import { POOL_TYPE } from 'constants/amm';
 
 import { contractValueToFormattedAmount } from 'helpers/amount';
 import { getAssetFromString } from 'helpers/assets';
-import { getDateString } from 'helpers/date';
+import { convertLocalDateToUTCIgnoringTimezone, getDateString } from 'helpers/date';
 import { getIsTestnetEnv } from 'helpers/env';
 import { formatBalance } from 'helpers/format-number';
 
@@ -87,7 +87,8 @@ const getOperationFilterValue = (filter: OperationFilter, isConcentratedPool: bo
     return filter;
 };
 
-const getDateParam = (timestamp: number) => format(timestamp, 'yyyy-MM-dd HH:mm:ss');
+const getDateParam = (timestamp: number) =>
+    format(convertLocalDateToUTCIgnoringTimezone(new Date(timestamp)), 'yyyy-MM-dd HH:mm:ss');
 
 const getEventTitle = (event: PoolEvent, pool: PoolExtended) => {
     switch (event.event_type) {

@@ -8,8 +8,6 @@ import useOnClickOutside from 'hooks/useOutsideClick';
 
 import { DatePicker, Input } from 'basics/inputs';
 
-import ResetButton from '../ResetButton/ResetButton';
-
 import {
     ArrowIcon,
     DateDropdown,
@@ -23,6 +21,8 @@ import {
     QuickRangeButton,
     QuickRanges,
 } from './DateRangePicker.styled';
+
+import ResetButton from '../ResetButton/ResetButton';
 
 export enum DatePreset {
     all = 'all',
@@ -50,6 +50,9 @@ const QUICK_DATE_PRESETS: { value: DatePreset; label: string }[] = [
     { value: DatePreset.month, label: 'Last month' },
     { value: DatePreset.year, label: 'Last year' },
 ];
+
+const TIME_INTERVAL_MINUTES = 60;
+const MIN_RANGE_MS = TIME_INTERVAL_MINUTES * 60 * 1000;
 
 const getPresetRange = (preset: DatePreset): DateRangeFilter => {
     const now = new Date();
@@ -126,8 +129,13 @@ const DateRangePicker = ({ value, onChange }: Props) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const nowTimestamp = Date.now();
     const now = new Date(nowTimestamp);
-    const fromMaxTimestamp = value.to ? Math.min(value.to, nowTimestamp) : nowTimestamp;
+    const fromMaxTimestamp = value.to
+        ? Math.min(value.to - MIN_RANGE_MS, nowTimestamp)
+        : nowTimestamp;
+    const fromActiveTimestamp = value.from ?? fromMaxTimestamp;
     const fromMaxDate = new Date(fromMaxTimestamp);
+    const toMinTimestamp = value.from ? value.from + MIN_RANGE_MS : null;
+    const toActiveTimestamp = value.to ?? toMinTimestamp ?? nowTimestamp;
 
     useOnClickOutside(containerRef, () => setIsOpen(false));
 
@@ -138,7 +146,7 @@ const DateRangePicker = ({ value, onChange }: Props) => {
 
         onChange({
             from,
-            to: from && value.to && value.to < from ? null : value.to,
+            to: from && value.to && value.to - from < MIN_RANGE_MS ? null : value.to,
             preset: DatePreset.custom,
         });
     };
@@ -148,7 +156,7 @@ const DateRangePicker = ({ value, onChange }: Props) => {
 
         onChange({
             from: value.from,
-            to,
+            to: to && value.from && to - value.from < MIN_RANGE_MS ? null : to,
             preset: DatePreset.custom,
         });
     };
@@ -197,14 +205,15 @@ const DateRangePicker = ({ value, onChange }: Props) => {
                                 calendarStartDay={1}
                                 date={value.from}
                                 onChange={updateFrom}
+                                openToDate={new Date(fromActiveTimestamp)}
                                 dateFormat="MM.dd.yyyy HH:mm"
                                 placeholderText="MM.DD.YYYY hh:mm"
                                 maxDate={fromMaxDate}
-                                {...getTimeLimitProps(value.from, null, fromMaxTimestamp)}
+                                {...getTimeLimitProps(fromActiveTimestamp, null, fromMaxTimestamp)}
                                 disabledKeyboardNavigation
                                 fullWidth
                                 showTimeSelect
-                                timeIntervals={60}
+                                timeIntervals={TIME_INTERVAL_MINUTES}
                                 popperPlacement="top-start"
                             />
                         </DateField>
@@ -215,15 +224,20 @@ const DateRangePicker = ({ value, onChange }: Props) => {
                                 calendarStartDay={1}
                                 date={value.to}
                                 onChange={updateTo}
+                                openToDate={new Date(toActiveTimestamp)}
                                 dateFormat="MM.dd.yyyy HH:mm"
                                 placeholderText="MM.DD.YYYY hh:mm"
-                                minDate={value.from ? new Date(value.from) : undefined}
+                                minDate={toMinTimestamp ? new Date(toMinTimestamp) : undefined}
                                 maxDate={now}
-                                {...getTimeLimitProps(value.to, value.from, nowTimestamp)}
+                                {...getTimeLimitProps(
+                                    toActiveTimestamp,
+                                    toMinTimestamp,
+                                    nowTimestamp,
+                                )}
                                 disabledKeyboardNavigation
                                 fullWidth
                                 showTimeSelect
-                                timeIntervals={60}
+                                timeIntervals={TIME_INTERVAL_MINUTES}
                                 popperPlacement="top-start"
                             />
                         </DateField>
