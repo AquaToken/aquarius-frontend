@@ -1,4 +1,4 @@
-import { endOfDay, startOfDay, subDays, subMonths, subYears } from 'date-fns';
+import { isSameDay, startOfDay, subDays, subMonths, subYears } from 'date-fns';
 import * as React from 'react';
 import { useRef, useState } from 'react';
 
@@ -53,24 +53,25 @@ const QUICK_DATE_PRESETS: { value: DatePreset; label: string }[] = [
 
 const getPresetRange = (preset: DatePreset): DateRangeFilter => {
     const now = new Date();
+    const nowTimestamp = now.getTime();
 
     switch (preset) {
         case DatePreset.week:
             return {
                 from: startOfDay(subDays(now, 7)).getTime(),
-                to: endOfDay(now).getTime(),
+                to: nowTimestamp,
                 preset,
             };
         case DatePreset.month:
             return {
                 from: startOfDay(subMonths(now, 1)).getTime(),
-                to: endOfDay(now).getTime(),
+                to: nowTimestamp,
                 preset,
             };
         case DatePreset.year:
             return {
                 from: startOfDay(subYears(now, 1)).getTime(),
-                to: endOfDay(now).getTime(),
+                to: nowTimestamp,
                 preset,
             };
         case DatePreset.all:
@@ -100,11 +101,22 @@ interface Props {
 const DateRangePicker = ({ value, onChange }: Props) => {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+    const nowTimestamp = Date.now();
+    const now = new Date(nowTimestamp);
+    const fromMaxTimestamp = value.to ? Math.min(value.to, nowTimestamp) : nowTimestamp;
+    const fromMaxDate = new Date(fromMaxTimestamp);
 
     useOnClickOutside(containerRef, () => setIsOpen(false));
 
+    const clampToNow = (date: number | null) => (date ? Math.min(date, Date.now()) : null);
+
+    const getMaxTime = (date: number | null, maxTimestamp: number) =>
+        date && isSameDay(new Date(date), new Date(maxTimestamp))
+            ? new Date(maxTimestamp)
+            : undefined;
+
     const updateFrom = (date: number | null) => {
-        const from = date ?? null;
+        const from = clampToNow(date);
 
         onChange({
             from,
@@ -114,9 +126,11 @@ const DateRangePicker = ({ value, onChange }: Props) => {
     };
 
     const updateTo = (date: number | null) => {
+        const to = clampToNow(date);
+
         onChange({
             from: value.from,
-            to: date ?? null,
+            to,
             preset: DatePreset.custom,
         });
     };
@@ -167,7 +181,8 @@ const DateRangePicker = ({ value, onChange }: Props) => {
                                 onChange={updateFrom}
                                 dateFormat="MM.dd.yyyy HH:mm"
                                 placeholderText="MM.DD.YYYY hh:mm"
-                                maxDate={value.to ? new Date(value.to) : undefined}
+                                maxDate={fromMaxDate}
+                                maxTime={getMaxTime(value.from, fromMaxTimestamp)}
                                 disabledKeyboardNavigation
                                 fullWidth
                                 showTimeSelect
@@ -184,6 +199,8 @@ const DateRangePicker = ({ value, onChange }: Props) => {
                                 dateFormat="MM.dd.yyyy HH:mm"
                                 placeholderText="MM.DD.YYYY hh:mm"
                                 minDate={value.from ? new Date(value.from) : undefined}
+                                maxDate={now}
+                                maxTime={getMaxTime(value.to, nowTimestamp)}
                                 disabledKeyboardNavigation
                                 fullWidth
                                 showTimeSelect
