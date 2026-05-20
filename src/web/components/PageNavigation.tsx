@@ -57,11 +57,14 @@ const OVERSCROLL_OFFSET = 10;
 
 const PageNavigation = ({ anchors }: { anchors: PageAnchor[] }): React.ReactNode => {
     const scrollToRef = (ref: React.RefObject<HTMLElement>) => {
-        const elementPosition =
-            (ref.current?.getBoundingClientRect().top || 0) + document.body.scrollTop;
+        if (!ref.current) {
+            return;
+        }
+
+        const elementPosition = ref.current.getBoundingClientRect().top + window.scrollY;
         const offsetPosition = elementPosition - SCROLL_OFFSET;
 
-        document.body.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
     };
 
     const activeIndex = useActiveAnchorIndex(
