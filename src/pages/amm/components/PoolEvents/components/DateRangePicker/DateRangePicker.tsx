@@ -187,6 +187,7 @@ const DateRangePicker = ({ value, onChange }: Props) => {
                                 fullWidth
                                 showTimeSelect
                                 timeIntervals={60}
+                                popperPlacement="top-start"
                             />
                         </DateField>
                         <DateField>
@@ -205,6 +206,7 @@ const DateRangePicker = ({ value, onChange }: Props) => {
                                 fullWidth
                                 showTimeSelect
                                 timeIntervals={60}
+                                popperPlacement="top-start"
                             />
                         </DateField>
                     </DateFields>
