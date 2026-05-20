@@ -1,4 +1,4 @@
-import { isSameDay, startOfDay, subDays, subMonths, subYears } from 'date-fns';
+import { endOfDay, isSameDay, startOfDay, subDays, subMonths, subYears } from 'date-fns';
 import * as React from 'react';
 import { useRef, useState } from 'react';
 
@@ -93,6 +93,29 @@ const getDateRangeLabel = (range: DateRangeFilter) => {
     return `${fromLabel} - ${toLabel}`;
 };
 
+const getTimeLimitProps = (
+    date: number | null,
+    minTimestamp?: number | null,
+    maxTimestamp?: number | null,
+) => {
+    if (!date) {
+        return {};
+    }
+
+    const selectedDate = new Date(date);
+    const hasMinTime = minTimestamp && isSameDay(selectedDate, new Date(minTimestamp));
+    const hasMaxTime = maxTimestamp && isSameDay(selectedDate, new Date(maxTimestamp));
+
+    if (!hasMinTime && !hasMaxTime) {
+        return {};
+    }
+
+    return {
+        minTime: hasMinTime ? new Date(minTimestamp) : startOfDay(selectedDate),
+        maxTime: hasMaxTime ? new Date(maxTimestamp) : endOfDay(selectedDate),
+    };
+};
+
 interface Props {
     value: DateRangeFilter;
     onChange: (value: DateRangeFilter) => void;
@@ -109,11 +132,6 @@ const DateRangePicker = ({ value, onChange }: Props) => {
     useOnClickOutside(containerRef, () => setIsOpen(false));
 
     const clampToNow = (date: number | null) => (date ? Math.min(date, Date.now()) : null);
-
-    const getMaxTime = (date: number | null, maxTimestamp: number) =>
-        date && isSameDay(new Date(date), new Date(maxTimestamp))
-            ? new Date(maxTimestamp)
-            : undefined;
 
     const updateFrom = (date: number | null) => {
         const from = clampToNow(date);
@@ -182,7 +200,7 @@ const DateRangePicker = ({ value, onChange }: Props) => {
                                 dateFormat="MM.dd.yyyy HH:mm"
                                 placeholderText="MM.DD.YYYY hh:mm"
                                 maxDate={fromMaxDate}
-                                maxTime={getMaxTime(value.from, fromMaxTimestamp)}
+                                {...getTimeLimitProps(value.from, null, fromMaxTimestamp)}
                                 disabledKeyboardNavigation
                                 fullWidth
                                 showTimeSelect
@@ -201,7 +219,7 @@ const DateRangePicker = ({ value, onChange }: Props) => {
                                 placeholderText="MM.DD.YYYY hh:mm"
                                 minDate={value.from ? new Date(value.from) : undefined}
                                 maxDate={now}
-                                maxTime={getMaxTime(value.to, nowTimestamp)}
+                                {...getTimeLimitProps(value.to, value.from, nowTimestamp)}
                                 disabledKeyboardNavigation
                                 fullWidth
                                 showTimeSelect
