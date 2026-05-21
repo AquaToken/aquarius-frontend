@@ -514,6 +514,7 @@ const AddIncentivePage = () => {
                                         fullWidth
                                         showTimeSelect
                                         timeIntervals={60}
+                                        popperPlacement="top-start"
                                     />
                                     <DashIcon />
 
@@ -530,6 +531,7 @@ const AddIncentivePage = () => {
                                         disabled={!startDay}
                                         minDate={addDays(startDay, config.duration / 24 / 60 / 60)}
                                         fullWidth
+                                        popperPlacement="top-start"
                                     />
                                 </FormRow>
 
